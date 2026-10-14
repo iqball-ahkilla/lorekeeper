@@ -55,7 +55,7 @@ async function EntryContent({ params }: { params: Params }) {
 
 export default function EntryPage({ params }: { params: Params }) {
   return (
-    <main className="mx-auto max-w-2xl p-8">
+    <main className="mx-auto w-full max-w-2xl p-8">
       <Suspense fallback={<p>Memuat...</p>}>
         <EntryContent params={params} />
       </Suspense>
