@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth'
 import CommentForm from '@/components/CommentForm'
 import NoteForm from '@/components/NoteForm'
 
+import { toggleVote } from '@/app/actions/votes'
+
 type Post = {
   id: string
   parent_id: string | null
@@ -14,6 +16,8 @@ type Post = {
   evidence_text: string | null
   created_at: string
   profiles: { username: string; role: string }
+  author_id: string
+  note_votes: { user_id: string }[]
   edited_at: string | null
 }
 
@@ -59,6 +63,28 @@ function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
   )
 }
 
+function VoteControl({ post, userId }: { post: Post; userId: string | null }) {
+  const count = post.note_votes.length
+  const voted = userId !== null && post.note_votes.some((v) => v.user_id === userId)
+
+  // Belum login atau note milik sendiri: hanya menampilkan jumlah
+  if (!userId || post.author_id === userId) {
+    return <span className="text-sm opacity-70">▲ {count}</span>
+  }
+
+  return (
+    <form action={toggleVote} className="inline">
+      <input type="hidden" name="postId" value={post.id} />
+      <button
+        type="submit"
+        className={`text-sm ${voted ? 'font-semibold text-blue-500' : 'opacity-70'}`}
+      >
+        ▲ {count}{voted ? ' · didukung' : ''}
+      </button>
+    </form>
+  )
+}
+
 export default async function CommentSection({ entryId, blocks }: Props) {
   const user = await getCurrentUser()
   const supabase = await createClient()
@@ -66,7 +92,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   const { data, error } = await supabase
     .from('community_posts')
     .select(
-      'id, parent_id, type, status, content_block_id, body, evidence_text, created_at, edited_at, profiles!author_id(username, role)'
+      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(username, role)'
     )
     .eq('lore_entry_id', entryId)
     .or('status.is.null,status.neq.rejected')
@@ -127,6 +153,12 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                 <p className="mt-2 border-l-2 border-gray-400 pl-3 text-sm opacity-80">
                   <span className="font-medium">Bukti:</span> {post.evidence_text}
                 </p>
+              )}
+
+              {post.type === 'note' && (
+                <div className="mt-2">
+                    <VoteControl post={post} userId={user?.id ?? null} />
+                </div>
               )}
 
               {replies.length > 0 && (

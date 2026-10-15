@@ -3,8 +3,11 @@ import { requireLorekeeper } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import ReviewCard, { type ReviewNote } from '@/components/ReviewCard'
 
-const SELECT =
-  'id, status, body, evidence_text, created_at, edited_at, profiles!author_id(username), content_blocks(body), lore_entries(title, slug, subsections(slug, regions(slug)))'
+// const SELECT =
+//   'id, status, body, evidence_text, created_at, edited_at, profiles!author_id(username), content_blocks(body), lore_entries(title, slug, note_votes(user_id), subsections(slug, regions(slug)))'
+
+  const SELECT =
+  'id, status, body, evidence_text, created_at, edited_at, note_votes(user_id), profiles!author_id(username), content_blocks(body), lore_entries(title, slug, subsections(slug, regions(slug)))'
 
 async function LorekeeperContent() {
   const user = await requireLorekeeper()
@@ -25,7 +28,11 @@ async function LorekeeperContent() {
     .order('reviewed_at', { ascending: false })
     .limit(20)
 
-  const pendingNotes = (pending ?? []) as unknown as ReviewNote[]
+  const pendingNotes = ((pending ?? []) as unknown as ReviewNote[]).sort(
+    (a, b) =>
+      b.note_votes.length - a.note_votes.length ||
+      a.created_at.localeCompare(b.created_at)
+  )
   const approvedNotes = (approved ?? []) as unknown as ReviewNote[]
 
   return (

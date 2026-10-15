@@ -20,6 +20,7 @@ export type ReviewNote = {
     slug: string
     subsections: { slug: string; regions: { slug: string } }
   }
+  note_votes: { user_id: string }[]
 }
 
 const statusLabel = {
@@ -51,7 +52,9 @@ export default function ReviewCard({ note }: { note: ReviewNote }) {
         </p>
       )}
 
-      <p className="text-xs opacity-60">Diajukan oleh {note.profiles.username}</p>
+      <p className="text-xs opacity-60">
+        Diajukan oleh {note.profiles.username} · ▲ {note.note_votes.length} dukungan
+      </p>
       <p className="whitespace-pre-line">{note.body}</p>
 
       {note.evidence_text && (
