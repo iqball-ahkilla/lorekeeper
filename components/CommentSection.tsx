@@ -15,7 +15,7 @@ type Post = {
   body: string
   evidence_text: string | null
   created_at: string
-  profiles: { username: string; role: string }
+  profiles: { id: string, username: string; role: string }
   author_id: string
   note_votes: { user_id: string }[]
   edited_at: string | null
@@ -37,7 +37,9 @@ function formatDate(iso: string) {
 function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
   return (
     <p className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="font-semibold">{post.profiles.username}</span>
+      <Link href={`/profile/${post.profiles.id}`} className="font-semibold hover:underline">
+       {post.profiles.username}
+      </Link>      
       {post.profiles.role === 'lorekeeper' && (
         <span className="rounded bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-600">
           lorekeeper
@@ -92,7 +94,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   const { data, error } = await supabase
     .from('community_posts')
     .select(
-      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(username, role)'
+      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(id, username, role)'
     )
     .eq('lore_entry_id', entryId)
     .or('status.is.null,status.neq.rejected')

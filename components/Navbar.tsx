@@ -23,7 +23,11 @@ export default async function Navbar() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-300 px-8">
+
+    <nav className="flex items-center gap-4">
       <Link href="/" className="font-bold">Lore Wiki</Link>
+      <Link href="/leaderboard" className="text-sm underline">Leaderboard</Link>
+    </nav>
 
       {profile ? (
         <div className="flex items-center gap-4 text-sm">
@@ -35,7 +39,7 @@ export default async function Navbar() {
           )}
           
           <span>
-            {profile.username}
+            <Link href={`/profile/${userId}`} className="underline">{profile.username}</Link>
             {profile.role === 'lorekeeper' && (
               <span className="ml-2 rounded bg-yellow-500/20 px-2 py-0.5 text-yellow-600">
                 lorekeeper

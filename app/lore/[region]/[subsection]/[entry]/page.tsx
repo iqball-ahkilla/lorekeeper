@@ -34,7 +34,7 @@ async function EntryContent({ params }: { params: Params }) {
 
     const { data: noteRows } = await supabase
     .from('community_posts')
-    .select('id, content_block_id, body, edited_at, profiles!author_id(username)')
+    .select('id, content_block_id, body, edited_at, profiles!author_id(id, username)')
     .eq('lore_entry_id', entry.id)
     .eq('type', 'note')
     .eq('status', 'approved')
@@ -45,7 +45,7 @@ async function EntryContent({ params }: { params: Params }) {
     content_block_id: string
     body: string
     edited_at: string | null
-    profiles: { username: string }
+    profiles: { id: string, username: string }
   }
 
   const notesByBlock = new Map<string, ApprovedRow[]>()
@@ -77,6 +77,7 @@ async function EntryContent({ params }: { params: Params }) {
                 key={n.id}
                 body={n.body}
                 author={n.profiles.username}
+                authorId={n.profiles.id}
                 edited={n.edited_at !== null}
               />
             ))}

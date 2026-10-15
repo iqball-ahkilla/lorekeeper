@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 
-type Props = { body: string; author: string; edited: boolean }
+import Link from 'next/link'
 
-export default function ApprovedNote({ body, author, edited }: Props) {
+type Props = { 
+    body: string; 
+    author: string;
+    authorId: string; 
+    edited: boolean
+}
+
+export default function ApprovedNote({ body, author, authorId, edited }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -20,7 +27,12 @@ export default function ApprovedNote({ body, author, edited }: Props) {
 
       {open && (
         <p className="mt-1 text-xs opacity-70">
-          Teks masih bersifat teori/spekulasi komunitas. Diajukan oleh {author}
+          Teks masih bersifat teori/spekulasi komunitas. Diajukan oleh{' '}
+          <Link
+            href={`/profile/${authorId}`}
+            className="underline">
+            {author}
+          </Link>
           {edited ? ' (disunting lorekeeper)' : ''}.
         </p>
       )}
