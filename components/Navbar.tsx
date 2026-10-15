@@ -27,6 +27,11 @@ export default async function Navbar() {
 
       {profile ? (
         <div className="flex items-center gap-4 text-sm">
+
+          {profile.role === 'lorekeeper' && (
+            <Link href="/lorekeeper" className="underline">Panel</Link>
+          )}
+          
           <span>
             {profile.username}
             {profile.role === 'lorekeeper' && (
