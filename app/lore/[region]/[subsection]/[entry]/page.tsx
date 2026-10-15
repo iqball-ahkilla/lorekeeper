@@ -3,9 +3,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+import CommentSection from '@/components/CommentSection'
+
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
 type EntryData = {
+  id: string
   title: string
   content_blocks: { id: string; body: string; sort_order: number }[]
   subsections: { name: string; regions: { name: string } }
@@ -17,7 +20,7 @@ async function EntryContent({ params }: { params: Params }) {
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'title, content_blocks(id, body, sort_order), subsections!inner(name, regions!inner(name))'
+      'id, title, content_blocks(id, body, sort_order), subsections!inner(name, regions!inner(name))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -49,6 +52,12 @@ async function EntryContent({ params }: { params: Params }) {
           </section>
         ))}
       </div>
+
+      <section className="mt-12 border-t border-gray-400 pt-6">
+        <Suspense fallback={<p>Memuat komentar...</p>}>
+          <CommentSection entryId={entry.id} />
+        </Suspense>
+      </section>
     </>
   )
 }
