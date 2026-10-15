@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 import CommentSection from '@/components/CommentSection'
+import ApprovedNote from '@/components/ApprovedNote'
 
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
@@ -31,6 +32,29 @@ async function EntryContent({ params }: { params: Params }) {
   if (!data) notFound()
     const entry = data as unknown as EntryData
 
+    const { data: noteRows } = await supabase
+    .from('community_posts')
+    .select('id, content_block_id, body, edited_at, profiles!author_id(username)')
+    .eq('lore_entry_id', entry.id)
+    .eq('type', 'note')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: true })
+
+  type ApprovedRow = {
+    id: string
+    content_block_id: string
+    body: string
+    edited_at: string | null
+    profiles: { username: string }
+  }
+
+  const notesByBlock = new Map<string, ApprovedRow[]>()
+  for (const n of (noteRows ?? []) as unknown as ApprovedRow[]) {
+    const list = notesByBlock.get(n.content_block_id) ?? []
+    list.push(n)
+    notesByBlock.set(n.content_block_id, list)
+  }
+
   return (
     <>
       <p className="text-sm">
@@ -48,7 +72,14 @@ async function EntryContent({ params }: { params: Params }) {
           <section key={block.id}>
             {/* Fase 6: gambar/video pendamping muncul di sini */}
             <p className="whitespace-pre-line leading-relaxed">{block.body}</p>
-            {/* Fase 4: community note approved muncul di sini */}
+            {(notesByBlock.get(block.id) ?? []).map((n) => (
+              <ApprovedNote
+                key={n.id}
+                body={n.body}
+                author={n.profiles.username}
+                edited={n.edited_at !== null}
+              />
+            ))}
           </section>
         ))}
       </div>

@@ -14,6 +14,7 @@ type Post = {
   evidence_text: string | null
   created_at: string
   profiles: { username: string; role: string }
+  edited_at: string | null
 }
 
 type Props = {
@@ -65,7 +66,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   const { data, error } = await supabase
     .from('community_posts')
     .select(
-      'id, parent_id, type, status, content_block_id, body, evidence_text, created_at, profiles!author_id(username, role)'
+      'id, parent_id, type, status, content_block_id, body, evidence_text, created_at, edited_at, profiles!author_id(username, role)'
     )
     .eq('lore_entry_id', entryId)
     .or('status.is.null,status.neq.rejected')
@@ -117,6 +118,10 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                 }
               />
               <p className="mt-1 whitespace-pre-line">{post.body}</p>
+
+              {post.type === 'note' && post.edited_at && (
+                <p className="text-xs opacity-50">disunting lorekeeper</p>
+               )}
 
               {post.type === 'note' && post.evidence_text && (
                 <p className="mt-2 border-l-2 border-gray-400 pl-3 text-sm opacity-80">
