@@ -55,7 +55,13 @@ async function EntryContent({ params }: { params: Params }) {
 
       <section className="mt-12 border-t border-gray-400 pt-6">
         <Suspense fallback={<p>Memuat komentar...</p>}>
-          <CommentSection entryId={entry.id} />
+          <CommentSection
+            entryId={entry.id}
+            blocks={entry.content_blocks.map((b) => ({
+              id: b.id,
+              preview: b.body.slice(0, 60),
+            }))}
+          />
         </Suspense>
       </section>
     </>
