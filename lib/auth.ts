@@ -32,3 +32,9 @@ export async function requireLorekeeper(): Promise<CurrentUser> {
   if (user.role !== 'lorekeeper') redirect('/') // login tapi bukan lorekeeper
   return user
 }
+
+export async function requireUser(): Promise<CurrentUser> {
+  const user = await getCurrentUser()
+  if (!user) redirect('/login')
+  return user
+}
