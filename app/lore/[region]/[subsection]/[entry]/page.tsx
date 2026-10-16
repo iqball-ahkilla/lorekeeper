@@ -5,13 +5,14 @@ import { supabase } from '@/lib/supabase'
 
 import CommentSection from '@/components/CommentSection'
 import ApprovedNote from '@/components/ApprovedNote'
+import BlockMedia, { type Media } from '@/components/BlockMedia'
 
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
 type EntryData = {
   id: string
   title: string
-  content_blocks: { id: string; body: string; sort_order: number }[]
+  content_blocks: { id: string; body: string; sort_order: number; block_media: Media[] }[]
   subsections: { name: string; regions: { name: string } }
 }
 
@@ -21,7 +22,7 @@ async function EntryContent({ params }: { params: Params }) {
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'id, title, content_blocks(id, body, sort_order), subsections!inner(name, regions!inner(name))'
+      'id, title, content_blocks(id, body, sort_order, block_media(id, media_type, media_url, caption, sort_order)), subsections!inner(name, regions!inner(name))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -70,7 +71,9 @@ async function EntryContent({ params }: { params: Params }) {
       <div className="mt-6 space-y-6">
         {entry.content_blocks.map((block) => (
           <section key={block.id}>
-            {/* Fase 6: gambar/video pendamping muncul di sini */}
+            
+            <BlockMedia items={block.block_media} />
+
             <p className="whitespace-pre-line leading-relaxed">{block.body}</p>
             {(notesByBlock.get(block.id) ?? []).map((n) => (
               <ApprovedNote
