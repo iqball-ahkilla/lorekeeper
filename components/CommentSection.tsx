@@ -5,6 +5,7 @@ import CommentForm from '@/components/CommentForm'
 import NoteForm from '@/components/NoteForm'
 
 import { toggleVote } from '@/app/actions/votes'
+import Attachments, { type Attachment } from '@/components/Attachments'
 
 type Post = {
   id: string
@@ -18,6 +19,7 @@ type Post = {
   profiles: { id: string, username: string; role: string }
   author_id: string
   note_votes: { user_id: string }[]
+  note_attachments: Attachment[]
   edited_at: string | null
 }
 
@@ -94,7 +96,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   const { data, error } = await supabase
     .from('community_posts')
     .select(
-      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(id, username, role)'
+      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(id, username, role), note_attachments(id, file_path, file_name, file_type)'
     )
     .eq('lore_entry_id', entryId)
     .or('status.is.null,status.neq.rejected')
@@ -120,7 +122,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
               Ajukan Lore Entry (catatan dengan bukti)
             </summary>
             <div className="mt-3">
-              <NoteForm entryId={entryId} blocks={blocks} />
+              <NoteForm entryId={entryId} blocks={blocks} userId={user.id} />
             </div>
           </details>
         </div>
@@ -156,6 +158,8 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                   <span className="font-medium">Bukti:</span> {post.evidence_text}
                 </p>
               )}
+
+              <Attachments items={post.note_attachments} />
 
               {post.type === 'note' && (
                 <div className="mt-2">

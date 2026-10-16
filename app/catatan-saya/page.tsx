@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
+import Attachments, { type Attachment } from '@/components/Attachments'
+
 type MyNote = {
   id: string
   status: 'submitted' | 'under_review' | 'approved' | 'rejected'
@@ -16,6 +18,7 @@ type MyNote = {
     slug: string
     subsections: { slug: string; regions: { slug: string } }
   }
+  note_attachments: Attachment[]
 }
 
 const statusInfo = {
@@ -40,7 +43,7 @@ async function MyNotesContent() {
   const { data } = await supabase
     .from('community_posts')
     .select(
-      'id, status, body, evidence_text, rejection_reason, created_at, content_blocks(body), lore_entries(title, slug, subsections(slug, regions(slug)))'
+      'id, status, body, evidence_text, rejection_reason, created_at, content_blocks(body), lore_entries(title, slug, subsections(slug, regions(slug))), note_attachments(id, file_path, file_name, file_type)'
     )
     .eq('author_id', user.id)
     .eq('type', 'note')
@@ -89,6 +92,8 @@ async function MyNotesContent() {
                     <span className="font-medium">Bukti:</span> {n.evidence_text}
                   </p>
                 )}
+
+                <Attachments items={n.note_attachments} />
 
                 {n.status === 'rejected' && n.rejection_reason && (
                   <div className="rounded border border-red-500/40 bg-red-500/10 p-3 text-sm">

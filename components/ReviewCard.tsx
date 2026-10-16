@@ -6,6 +6,8 @@ import {
   editNote,
 } from '@/app/actions/review'
 
+import Attachments, { type Attachment } from '@/components/Attachments'
+
 export type ReviewNote = {
   id: string
   status: 'submitted' | 'under_review' | 'approved'
@@ -20,6 +22,7 @@ export type ReviewNote = {
     slug: string
     subsections: { slug: string; regions: { slug: string } }
   }
+  note_attachments: Attachment[]
   note_votes: { user_id: string }[]
 }
 
@@ -62,6 +65,9 @@ export default function ReviewCard({ note }: { note: ReviewNote }) {
           <span className="font-medium">Bukti:</span> {note.evidence_text}
         </p>
       )}
+
+      <Attachments items={note.note_attachments} />
+
       {note.edited_at && <p className="text-xs opacity-50">disunting lorekeeper</p>}
 
       {note.status === 'submitted' && (
