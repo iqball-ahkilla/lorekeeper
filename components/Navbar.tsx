@@ -27,6 +27,7 @@ export default async function Navbar() {
     <nav className="flex items-center gap-4">
       <Link href="/" className="font-bold">Lore Wiki</Link>
       <Link href="/leaderboard" className="text-sm underline">Leaderboard</Link>
+      <Link href="/search" className="text-sm underline">Cari</Link>
     </nav>
 
       {profile ? (

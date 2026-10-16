@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
+import RichText from '@/components/RichText'
+
+
 type Params = Promise<{ id: string }>
 
 type ProfileNote = {
@@ -82,7 +85,9 @@ async function ProfileContent({ params }: { params: Params }) {
                     {n.content_blocks.body.slice(0, 200)}
                   </p>
                 )}
-                <p className="italic text-yellow-600">{n.body}</p>
+                <p className="italic text-yellow-600">
+                  <RichText text={n.body} />
+                </p>
                 <p className="text-xs opacity-50">{formatDate(n.created_at)}</p>
               </article>
             )

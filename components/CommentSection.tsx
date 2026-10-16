@@ -6,6 +6,7 @@ import NoteForm from '@/components/NoteForm'
 
 import { toggleVote } from '@/app/actions/votes'
 import Attachments, { type Attachment } from '@/components/Attachments'
+import RichText from '@/components/RichText'
 
 type Post = {
   id: string
@@ -147,7 +148,13 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                   post.content_block_id ? blockNumber.get(post.content_block_id) : undefined
                 }
               />
-              <p className="mt-1 whitespace-pre-line">{post.body}</p>
+              <p className="mt-1 whitespace-pre-line">
+                {post.type === 'note' && post.status === 'approved' ? (
+                  <RichText text={post.body} />
+                ) : (
+                  post.body
+                )}
+              </p>
 
               {post.type === 'note' && post.edited_at && (
                 <p className="text-xs opacity-50">disunting lorekeeper</p>

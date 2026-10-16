@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import CommentSection from '@/components/CommentSection'
 import ApprovedNote from '@/components/ApprovedNote'
 import BlockMedia, { type Media } from '@/components/BlockMedia'
+import RichText from '@/components/RichText'
 
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
@@ -74,7 +75,9 @@ async function EntryContent({ params }: { params: Params }) {
             
             <BlockMedia items={block.block_media} />
 
-            <p className="whitespace-pre-line leading-relaxed">{block.body}</p>
+            <p className="whitespace-pre-line leading-relaxed">
+              <RichText text={block.body} />
+            </p>
             {(notesByBlock.get(block.id) ?? []).map((n) => (
               <ApprovedNote
                 key={n.id}

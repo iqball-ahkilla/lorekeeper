@@ -33,6 +33,14 @@ export default function Home() {
   return (
     <main className="p-8">
       <h1 className="mb-6 text-2xl font-bold">Lore Wiki</h1>
+      <form action="/search" className="mb-6">
+        <input
+          type="search"
+          name="q"
+          placeholder="Cari lore..."
+          className="w-full max-w-sm rounded border border-gray-400 bg-transparent px-3 py-2"
+        />
+      </form>
       <Suspense fallback={<p>Memuat...</p>}>
         <RegionList />
       </Suspense>
