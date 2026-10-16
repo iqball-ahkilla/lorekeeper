@@ -7,6 +7,7 @@ import CommentSection from '@/components/CommentSection'
 import ApprovedNote from '@/components/ApprovedNote'
 import BlockMedia, { type Media } from '@/components/BlockMedia'
 import RichText from '@/components/RichText'
+import EditContentLink from '@/components/EditContentLink'
 
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
@@ -66,6 +67,12 @@ async function EntryContent({ params }: { params: Params }) {
         {' / '}
         <Link href={`/lore/${region}/${subsection}`} className="underline">{entry.subsections.name}</Link>
       </p>
+
+      <div className="mt-2 min-h-5">
+        <Suspense fallback={null}>
+          <EditContentLink href={`/lorekeeper/edit/${region}/${subsection}/${entrySlug}`} />
+        </Suspense>
+      </div>
 
       <h1 className="mt-4 text-2xl font-bold">{entry.title}</h1>
 

@@ -3,6 +3,8 @@ import { requireLorekeeper } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import ReviewCard, { type ReviewNote } from '@/components/ReviewCard'
 
+import type { LinkTarget } from '@/components/LinkTextarea'
+
 // const SELECT =
 //   'id, status, body, evidence_text, created_at, edited_at, profiles!author_id(username), content_blocks(body), lore_entries(title, slug, note_votes(user_id), subsections(slug, regions(slug)))'
 
@@ -28,6 +30,11 @@ async function LorekeeperContent() {
     .order('reviewed_at', { ascending: false })
     .limit(20)
 
+  const { data: targetRows } = await supabase
+    .from('link_targets')
+    .select('path, label, kind, search_text')
+    const targets = (targetRows ?? []) as LinkTarget[]
+
   const pendingNotes = ((pending ?? []) as unknown as ReviewNote[]).sort(
     (a, b) =>
       b.note_votes.length - a.note_votes.length ||
@@ -48,7 +55,7 @@ async function LorekeeperContent() {
       ) : (
         <div className="space-y-4">
           {pendingNotes.map((n) => (
-            <ReviewCard key={n.id} note={n} />
+            <ReviewCard key={n.id} note={n} targets={targets} />
           ))}
         </div>
       )}
@@ -59,7 +66,7 @@ async function LorekeeperContent() {
       ) : (
         <div className="space-y-4">
           {approvedNotes.map((n) => (
-            <ReviewCard key={n.id} note={n} />
+            <ReviewCard key={n.id} note={n} targets={targets} />
           ))}
         </div>
       )}

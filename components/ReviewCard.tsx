@@ -7,6 +7,7 @@ import {
 } from '@/app/actions/review'
 
 import Attachments, { type Attachment } from '@/components/Attachments'
+import LinkTextarea, { type LinkTarget } from '@/components/LinkTextarea'
 
 export type ReviewNote = {
   id: string
@@ -34,7 +35,7 @@ const statusLabel = {
 
 const fieldClass = 'w-full rounded border border-gray-400 bg-transparent px-3 py-2 text-sm'
 
-export default function ReviewCard({ note }: { note: ReviewNote }) {
+export default function ReviewCard({ note, targets }: { note: ReviewNote; targets: LinkTarget[] }) {
   const e = note.lore_entries
   const href = `/lore/${e.subsections.regions.slug}/${e.subsections.slug}/${e.slug}`
 
@@ -110,12 +111,13 @@ export default function ReviewCard({ note }: { note: ReviewNote }) {
         <summary className="cursor-pointer underline">Edit teks catatan</summary>
         <form action={editNote} className="mt-2 space-y-2">
           <input type="hidden" name="postId" value={note.id} />
-          <textarea
+          <LinkTextarea
             name="body"
-            required
-            maxLength={2000}
-            rows={3}
             defaultValue={note.body}
+            targets={targets}
+            rows={3}
+            maxLength={2000}
+            required
             className={fieldClass}
           />
           <button type="submit" className="rounded border border-gray-400 px-3 py-1.5">
