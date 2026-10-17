@@ -8,6 +8,8 @@ import { toggleVote } from '@/app/actions/votes'
 import Attachments, { type Attachment } from '@/components/Attachments'
 import RichText from '@/components/RichText'
 
+import RelativeTime from '@/components/RelativeTime'
+
 type Post = {
   id: string
   parent_id: string | null
@@ -29,13 +31,13 @@ type Props = {
   blocks: { id: string; preview: string }[]
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+// function formatDate(iso: string) {
+//   return new Date(iso).toLocaleDateString('id-ID', {
+//     day: 'numeric',
+//     month: 'short',
+//     year: 'numeric',
+//   })
+// }
 
 function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
   return (
@@ -63,8 +65,8 @@ function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
           Disetujui
         </span>
       )}
-      <span className="opacity-50">{formatDate(post.created_at)}</span>
-    </p>
+      <RelativeTime iso={post.created_at} className="opacity-50" />    
+  </p>
   )
 }
 

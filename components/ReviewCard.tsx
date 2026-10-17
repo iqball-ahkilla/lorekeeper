@@ -9,6 +9,8 @@ import {
 import Attachments, { type Attachment } from '@/components/Attachments'
 import LinkTextarea, { type LinkTarget } from '@/components/LinkTextarea'
 
+import RelativeTime from '@/components/RelativeTime'
+
 export type ReviewNote = {
   id: string
   status: 'submitted' | 'under_review' | 'approved'
@@ -57,7 +59,7 @@ export default function ReviewCard({ note, targets }: { note: ReviewNote; target
       )}
 
       <p className="text-xs opacity-60">
-        Diajukan oleh {note.profiles.username} · ▲ {note.note_votes.length} dukungan
+        Diajukan oleh {note.profiles.username} · <RelativeTime iso={note.created_at} /> · ▲ {note.note_votes.length} dukungan
       </p>
       <p className="whitespace-pre-line">{note.body}</p>
 

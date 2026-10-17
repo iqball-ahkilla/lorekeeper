@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 
 import Attachments, { type Attachment } from '@/components/Attachments'
 
+import RelativeTime from '@/components/RelativeTime'
+
 type MyNote = {
   id: string
   status: 'submitted' | 'under_review' | 'approved' | 'rejected'
@@ -28,13 +30,13 @@ const statusInfo = {
   rejected: { label: 'Ditolak', className: 'bg-red-500/20 text-red-500' },
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+// function formatDate(iso: string) {
+//   return new Date(iso).toLocaleDateString('id-ID', {
+//     day: 'numeric',
+//     month: 'short',
+//     year: 'numeric',
+//   })
+// }
 
 async function MyNotesContent() {
   const user = await requireUser()
@@ -102,7 +104,7 @@ async function MyNotesContent() {
                   </div>
                 )}
 
-                <p className="text-xs opacity-50">Diajukan {formatDate(n.created_at)}</p>
+                <p className="text-xs opacity-50">Diajukan <RelativeTime iso={n.created_at} /></p>
               </article>
             )
           })}
