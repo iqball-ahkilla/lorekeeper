@@ -2,19 +2,21 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
+const KIND_LABEL: Record<string, string> = { region: 'Wilayah', topic: 'Topik' }
+
 type SearchParams = Promise<{ q?: string | string[] }>
 
-type RegionHit = { name: string; slug: string }
+type RegionHit = { name: string; slug: string; kind: string }
 type SubsectionHit = {
   name: string
   alt_name: string | null
   slug: string
-  regions: { name: string; slug: string }
+  regions: { name: string; slug: string; kind: string }
 }
 type EntryHit = {
   title: string
   slug: string
-  subsections: { name: string; slug: string; regions: { name: string; slug: string } }
+  subsections: { name: string; slug: string; regions: { name: string; slug: string; kind: string } }
 }
 
 // Buang karakter yang punya arti khusus di sintaks filter PostgREST,
@@ -56,15 +58,15 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
   const pattern = `%${q}%`
 
   const [regionsRes, subsectionsRes, entriesRes] = await Promise.all([
-    supabase.from('regions').select('name, slug').ilike('name', pattern).limit(10),
+    supabase.from('regions').select('name, slug, kind').ilike('name', pattern).limit(10),
     supabase
       .from('subsections')
-      .select('name, alt_name, slug, regions(name, slug)')
+      .select('name, alt_name, slug, regions(name, slug, kind)')
       .or(`name.ilike."${pattern}",alt_name.ilike."${pattern}"`)
       .limit(20),
     supabase
       .from('lore_entries')
-      .select('title, slug, subsections(name, slug, regions(name, slug))')
+      .select('title, slug, subsections(name, slug, regions(name, slug, kind))')
       .ilike('title', pattern)
       .limit(20),
   ])
@@ -100,6 +102,9 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
                     <Link href={`/lore/${r.slug}`} className="font-medium underline">
                       {r.name}
                     </Link>
+                    <span className="ml-2 text-xs opacity-50">
+                      {KIND_LABEL[r.kind]}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -119,7 +124,9 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
                       {s.name}
                     </Link>
                     {s.alt_name && <span className="ml-2 text-sm opacity-50">{s.alt_name}</span>}
-                    <p className="text-xs opacity-60">{s.regions.name}</p>
+                    <p className="text-xs opacity-60">
+                      {KIND_LABEL[s.regions.kind]} · {s.regions.name}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -139,7 +146,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
                       {e.title}
                     </Link>
                     <p className="text-xs opacity-60">
-                      {e.subsections.regions.name} / {e.subsections.name}
+                      {KIND_LABEL[e.subsections.regions.kind]} · {e.subsections.regions.name} / {e.subsections.name}
                     </p>
                   </li>
                 ))}

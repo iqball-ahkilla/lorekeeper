@@ -67,7 +67,7 @@ async function ProfileContent({ params }: { params: Params }) {
         )}
       </h1>
       <p className="mt-1 text-sm opacity-70">
-        Bergabung formatDateWIB(profile.created_at) · {notes.length} catatan disetujui
+        Bergabung {formatDateWIB(profile.created_at)} · {notes.length} catatan disetujui
       </p>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">Catatan yang disetujui</h2>

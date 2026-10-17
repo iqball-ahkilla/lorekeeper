@@ -10,8 +10,14 @@ type Params = Promise<{ region: string; subsection: string; entry: string }>
 
 type EditData = {
   title: string
-  content_blocks: { id: string; body: string; sort_order: number }[]
-}
+  content_blocks: {
+     id: string
+     body: string
+     sort_order: number
+     block_type: 'heading' | 'paragraph' | 'quote'
+     heading_level: 2 | 3 | null
+   }[]
+  }
 
 async function EditContent({ params }: { params: Params }) {
   await requireLorekeeper()
@@ -22,7 +28,7 @@ async function EditContent({ params }: { params: Params }) {
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'title, content_blocks(id, body, sort_order), subsections!inner(slug, regions!inner(slug))'
+      'title, content_blocks(id, body, sort_orde, block_type, heading_level), subsections!inner(slug, regions!inner(slug))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -57,7 +63,13 @@ async function EditContent({ params }: { params: Params }) {
           <ParagraphForm
             key={b.id}
             blockId={b.id}
-            label={`Paragraf ${i + 1}`}
+            label={`Blok ${i + 1} · ${
+              b.block_type === 'heading'
+                ? `Heading (H${b.heading_level})`
+                : b.block_type === 'quote'
+                  ? 'Kutipan'
+                  : 'Paragraf'
+            }`}
             initial={b.body}
             targets={targets}
           />
