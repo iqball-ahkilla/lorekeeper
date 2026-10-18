@@ -1,12 +1,14 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
+import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
 
 type Region = {
   name: string
   slug: string
   description: string | null
   kind: 'region' | 'topic'
+  status: ContentStatus
 }
 
 function Group({ title, items }: { title: string; items: Region[] }) {
@@ -20,7 +22,10 @@ function Group({ title, items }: { title: string; items: Region[] }) {
               href={`/lore/${r.slug}`}
               className="block rounded border border-gray-400 p-4 hover:border-blue-500"
             >
-              <span className="text-lg font-semibold">{r.name}</span>
+              <span className="flex items-center gap-2">
+                <span className="text-lg font-semibold">{r.name}</span>
+                <StatusBadge status={r.status} hidePublished />
+              </span>
               {r.description && (
                 <span className="mt-1 block text-sm opacity-70">{r.description}</span>
               )}
@@ -33,9 +38,10 @@ function Group({ title, items }: { title: string; items: Region[] }) {
 }
 
 async function RegionList() {
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('regions')
-    .select('name, slug, description, kind')
+    .select('name, slug, description, kind, status')
     .order('sort_order')
 
   if (error) return <p>Error: {error.message}</p>

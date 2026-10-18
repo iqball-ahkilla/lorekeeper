@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/server'
+import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
 import CommentSection from '@/components/CommentSection'
 import ApprovedNote from '@/components/ApprovedNote'
 import BlockMedia, { type Media } from '@/components/BlockMedia'
@@ -23,8 +24,9 @@ type Block = {
 type EntryData = {
   id: string
   title: string
+  status: ContentStatus
   content_blocks: Block[]
-  subsections: { name: string; regions: { name: string } }
+  subsections: { name: string; status: ContentStatus; regions: { name: string; status: ContentStatus } }
 }
 
 type ApprovedRow = {
@@ -38,10 +40,12 @@ type ApprovedRow = {
 async function EntryContent({ params }: { params: Params }) {
   const { region, subsection, entry: entrySlug } = await params
 
+  const supabase = await createClient()
+
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'id, title, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id, media_type, media_url, caption, sort_order)), subsections!inner(name, regions!inner(name))'
+      'id, title, status, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id, media_type, media_url, caption, sort_order)), subsections!inner(name, status, regions!inner(name, status))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -51,6 +55,11 @@ async function EntryContent({ params }: { params: Params }) {
 
   if (!data) notFound()
   const entry = data as unknown as EntryData
+
+  const hidden =
+     entry.status !== 'published' ||
+     entry.subsections.status !== 'published' ||
+     entry.subsections.regions.status !== 'published'
 
   const { data: noteRows } = await supabase
     .from('community_posts')
@@ -100,7 +109,18 @@ async function EntryContent({ params }: { params: Params }) {
         </Suspense>
       </div>
 
-      <h1 className="mt-4 text-2xl font-bold">{entry.title}</h1>
+      {hidden && (
+        <p className="mt-3 rounded border border-yellow-600/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700">
+          Pratinjau: halaman ini tidak terlihat oleh publik (entry: {entry.status},
+          sub-section: {entry.subsections.status}, induk: {entry.subsections.regions.status}).
+        </p>
+      )}
+      <h1 className="mt-4 flex items-center gap-3 text-2xl font-bold">
+        {entry.title}
+        <StatusBadge status={entry.status} hidePublished />
+      </h1>
+
+      {/* <h1 className="mt-4 text-2xl font-bold">{entry.title}</h1> */}
 
       <TableOfContents headings={headings} />
 
