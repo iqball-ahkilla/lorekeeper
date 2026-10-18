@@ -10,6 +10,7 @@ type Props = {
   resetOnSuccess?: boolean
   className?: string
   children: ReactNode
+  buttonClassName?: string
 }
 
 export default function ActionForm({
@@ -17,6 +18,7 @@ export default function ActionForm({
   submitLabel,
   resetOnSuccess = false,
   className,
+  buttonClassName,
   children,
 }: Props) {
   const [state, formAction, pending] = useActionState(action, null)
@@ -45,8 +47,7 @@ export default function ActionForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
-      >
+        className={buttonClassName ?? 'rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50'}>
         {pending ? 'Menyimpan...' : submitLabel}
       </button>
     </form>
