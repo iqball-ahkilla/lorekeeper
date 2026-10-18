@@ -28,7 +28,7 @@ async function EditContent({ params }: { params: Params }) {
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'title, content_blocks(id, body, sort_orde, block_type, heading_level), subsections!inner(slug, regions!inner(slug))'
+      'title, content_blocks(id, body, sort_order, block_type, heading_level), subsections!inner(slug, regions!inner(slug))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
