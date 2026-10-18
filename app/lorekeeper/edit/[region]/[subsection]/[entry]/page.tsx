@@ -8,6 +8,9 @@ import LinkTextarea, { type LinkTarget } from '@/components/LinkTextarea'
 import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
 import { addBlock, deleteBlock, moveBlock, updateBlock } from '@/app/actions/blocks'
 
+import MediaPanel from '@/components/MediaPanel'
+import { type Media } from '@/components/BlockMedia'
+
 type Params = Promise<{ region: string; subsection: string; entry: string }>
 
 type BlockRow = {
@@ -16,7 +19,7 @@ type BlockRow = {
   sort_order: number
   block_type: 'heading' | 'paragraph' | 'quote'
   heading_level: 2 | 3 | null
-  block_media: { id: string }[]
+  block_media: Media[]
   community_posts: {
     id: string
     type: string
@@ -127,7 +130,7 @@ async function EditContent({ params }: { params: Params }) {
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'id, title, status, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id), community_posts(id, type, status, deleted_at)), subsections!inner(slug, regions!inner(slug))'
+      'id, title, status, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id, media_type, media_url, caption, sort_order), community_posts(id, type, status, deleted_at)), subsections!inner(slug, regions!inner(slug))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -214,6 +217,8 @@ async function EditContent({ params }: { params: Params }) {
                 />
               </ActionForm>
 
+              <MediaPanel entryId={entry.id} blockId={b.id} items={b.block_media} />
+
               <details>
                 <summary className="cursor-pointer text-xs text-red-500 underline">
                   Hapus blok
@@ -234,7 +239,7 @@ async function EditContent({ params }: { params: Params }) {
                     <p className="text-xs text-red-500">
                       Blok ini
                       {mediaCount > 0
-                        ? ` beserta ${mediaCount} media (file di Storage tidak ikut terhapus)`
+                        ? ` beserta ${mediaCount} media (file gambarnya ikut dihapus dari Storage)`
                         : ''}{' '}
                       akan dihapus permanen.
                     </p>

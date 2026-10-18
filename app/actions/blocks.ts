@@ -133,8 +133,21 @@ export async function deleteBlock(
   if (!UUID.test(blockId)) return fail('Data tidak valid.')
 
   const supabase = await createClient()
+
+  // Catat path gambar SEBELUM blok dihapus (barisnya hilang bersama blok)
+  const { data: mediaPaths } = await supabase.rpc('lore_media_paths', {
+    p_type: 'block',
+    p_id: blockId,
+  })
+
   const { error } = await supabase.rpc('delete_block', { p_block_id: blockId })
   if (error) return fail(dbMessage(error, 'Gagal menghapus blok.'))
+
+  const paths = (mediaPaths as string[] | null) ?? []
+  if (paths.length > 0) {
+    const { error: removeError } = await supabase.storage.from('lore-media').remove(paths)
+    if (removeError) console.error('Gagal menghapus file media:', removeError.message)
+  }
 
   refresh()
   return { ok: true, message: 'Blok dihapus.' }

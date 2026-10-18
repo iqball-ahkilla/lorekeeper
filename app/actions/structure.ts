@@ -382,8 +382,19 @@ export async function deleteItem(
     p_id: id,
   })
 
+  const { data: mediaPaths } = await supabase.rpc('lore_media_paths', {
+    p_type: type,
+    p_id: id,
+  })
+
   const { data, error } = await supabase.from(table).delete().eq('id', id).select('id')
   if (error || !data || data.length === 0) return fail('Gagal menghapus.')
+
+  const paths = (mediaPaths as string[] | null) ?? []
+  if (paths.length > 0) {
+    const { error: removeError } = await supabase.storage.from('lore-media').remove(paths)
+    if (removeError) console.error('Gagal menghapus file media:', removeError.message)
+  }
 
   await logAction({
     action: `${type}.delete`,
