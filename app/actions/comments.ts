@@ -27,11 +27,16 @@ export async function addComment(
   if (parentId) {
     const { data: parent } = await supabase
       .from('community_posts')
-      .select('id, lore_entry_id, parent_id')
+      .select('id, lore_entry_id, parent_id, deleted_at')
       .eq('id', parentId)
       .maybeSingle()
 
-    if (!parent || parent.lore_entry_id !== entryId || parent.parent_id !== null) {
+    if (
+      !parent ||
+      parent.lore_entry_id !== entryId ||
+      parent.parent_id !== null ||
+      parent.deleted_at !== null
+    ) {
       return { error: 'Komentar yang dibalas tidak valid.' }
     }
   }

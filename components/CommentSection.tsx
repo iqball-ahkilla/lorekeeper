@@ -1,14 +1,14 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUser } from '@/lib/auth'
+import { getCurrentUser, type CurrentUser } from '@/lib/auth'
 import CommentForm from '@/components/CommentForm'
 import NoteForm from '@/components/NoteForm'
-
-import { toggleVote } from '@/app/actions/votes'
-import Attachments, { type Attachment } from '@/components/Attachments'
 import RichText from '@/components/RichText'
-
 import RelativeTime from '@/components/RelativeTime'
+import ActionForm from '@/components/ActionForm'
+import Attachments, { type Attachment } from '@/components/Attachments'
+import { toggleVote } from '@/app/actions/votes'
+import { editComment, deleteComment } from '@/app/actions/posts'
 
 type Post = {
   id: string
@@ -16,14 +16,16 @@ type Post = {
   type: 'comment' | 'note'
   status: 'submitted' | 'under_review' | 'approved' | 'rejected' | null
   content_block_id: string | null
+  author_id: string
   body: string
   evidence_text: string | null
   created_at: string
-  profiles: { id: string, username: string; role: string }
-  author_id: string
+  edited_at: string | null
+  edited_by: string | null
+  deleted_at: string | null
+  profiles: { id: string; username: string; role: string }
   note_votes: { user_id: string }[]
   note_attachments: Attachment[]
-  edited_at: string | null
 }
 
 type Props = {
@@ -31,20 +33,28 @@ type Props = {
   blocks: { id: string; preview: string }[]
 }
 
-// function formatDate(iso: string) {
-//   return new Date(iso).toLocaleDateString('id-ID', {
-//     day: 'numeric',
-//     month: 'short',
-//     year: 'numeric',
-//   })
-// }
+const fieldClass =
+  'w-full rounded border border-gray-400 bg-transparent px-3 py-2 text-sm'
+
+// "diedit" kalau penulisnya sendiri yang mengubah, selain itu lorekeeper
+function editedLabel(post: Post) {
+  if (!post.edited_at || post.deleted_at) return null
+  return post.edited_by && post.edited_by === post.author_id
+    ? 'diedit'
+    : 'disunting lorekeeper'
+}
 
 function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
+  const edited = editedLabel(post)
+
   return (
     <p className="flex flex-wrap items-center gap-2 text-sm">
-      <Link href={`/profile/${post.profiles.id}`} className="font-semibold hover:underline">
-       {post.profiles.username}
-      </Link>      
+      <Link
+        href={`/profile/${post.profiles.id}`}
+        className="font-semibold hover:underline"
+      >
+        {post.profiles.username}
+      </Link>
       {post.profiles.role === 'lorekeeper' && (
         <span className="rounded bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-600">
           lorekeeper
@@ -65,8 +75,21 @@ function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
           Disetujui
         </span>
       )}
-      <RelativeTime iso={post.created_at} className="opacity-50" />    
-  </p>
+      <RelativeTime iso={post.created_at} className="opacity-50" />
+      {edited && <span className="text-xs opacity-50">· {edited}</span>}
+    </p>
+  )
+}
+
+function PostBody({ post }: { post: Post }) {
+  return (
+    <p className="mt-1 whitespace-pre-line">
+      {post.type === 'note' && post.status === 'approved' ? (
+        <RichText text={post.body} />
+      ) : (
+        post.body
+      )}
+    </p>
   )
 }
 
@@ -74,7 +97,6 @@ function VoteControl({ post, userId }: { post: Post; userId: string | null }) {
   const count = post.note_votes.length
   const voted = userId !== null && post.note_votes.some((v) => v.user_id === userId)
 
-  // Belum login atau note milik sendiri: hanya menampilkan jumlah
   if (!userId || post.author_id === userId) {
     return <span className="text-sm opacity-70">▲ {count}</span>
   }
@@ -86,9 +108,57 @@ function VoteControl({ post, userId }: { post: Post; userId: string | null }) {
         type="submit"
         className={`text-sm ${voted ? 'font-semibold text-blue-500' : 'opacity-70'}`}
       >
-        ▲ {count}{voted ? ' · didukung' : ''}
+        ▲ {count}
+        {voted ? ' · didukung' : ''}
       </button>
     </form>
+  )
+}
+
+// Edit dan hapus komentar: penulis (edit + hapus), lorekeeper (hapus komentar orang lain)
+function CommentControls({ post, user }: { post: Post; user: CurrentUser | null }) {
+  if (!user || post.type !== 'comment' || post.deleted_at) return null
+
+  const isAuthor = post.author_id === user.id
+  const isModerator = user.role === 'lorekeeper'
+  if (!isAuthor && !isModerator) return null
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-4 text-sm">
+      {isAuthor && (
+        <details>
+          <summary className="cursor-pointer underline">Edit</summary>
+          <ActionForm action={editComment} submitLabel="Simpan" className="mt-2 space-y-2">
+            <input type="hidden" name="postId" value={post.id} />
+            <textarea
+              name="body"
+              required
+              maxLength={2000}
+              rows={3}
+              defaultValue={post.body}
+              className={fieldClass}
+            />
+          </ActionForm>
+        </details>
+      )}
+
+      <details>
+        <summary className="cursor-pointer text-red-500 underline">
+          {isAuthor ? 'Hapus' : 'Hapus (moderator)'}
+        </summary>
+        <ActionForm
+          action={deleteComment}
+          submitLabel="Ya, hapus komentar"
+          buttonClassName="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="mt-2 space-y-2"
+        >
+          <input type="hidden" name="postId" value={post.id} />
+          <p className="text-xs text-red-500">
+            Isi komentar akan dihapus permanen. Balasan di bawahnya tetap ada.
+          </p>
+        </ActionForm>
+      </details>
+    </div>
   )
 }
 
@@ -99,7 +169,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   const { data, error } = await supabase
     .from('community_posts')
     .select(
-      'id, parent_id, type, status, content_block_id, body, evidence_text, author_id, note_votes(user_id), created_at, edited_at, profiles!author_id(id, username, role), note_attachments(id, file_path, file_name, file_type)'
+      'id, parent_id, type, status, content_block_id, author_id, body, evidence_text, created_at, edited_at, edited_by, deleted_at, profiles!author_id(id, username, role), note_votes(user_id), note_attachments(id, file_path, file_name, file_type)'
     )
     .eq('lore_entry_id', entryId)
     .or('status.is.null,status.neq.rejected')
@@ -108,9 +178,14 @@ export default async function CommentSection({ entryId, blocks }: Props) {
   if (error) return <p>Gagal memuat komentar.</p>
 
   const posts = (data ?? []) as unknown as Post[]
-  const topLevel = posts.filter((p) => p.parent_id === null)
-  const repliesOf = (id: string) => posts.filter((p) => p.parent_id === id)
+  const repliesOf = (id: string) =>
+    posts.filter((p) => p.parent_id === id && p.deleted_at === null)
   const blockNumber = new Map(blocks.map((b, i) => [b.id, i + 1]))
+
+  // Post utama yang sudah dihapus hanya ditampilkan kalau masih punya balasan
+  const topLevel = posts.filter(
+    (p) => p.parent_id === null && (p.deleted_at === null || repliesOf(p.id).length > 0)
+  )
 
   return (
     <>
@@ -125,7 +200,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
               Ajukan Lore Entry (catatan dengan bukti)
             </summary>
             <div className="mt-3">
-              <NoteForm entryId={entryId} blocks={blocks} userId={user.id} />
+              <NoteForm entryId={entryId} userId={user.id} blocks={blocks} />
             </div>
           </details>
         </div>
@@ -142,38 +217,39 @@ export default async function CommentSection({ entryId, blocks }: Props) {
 
         {topLevel.map((post) => {
           const replies = repliesOf(post.id)
+          const deleted = post.deleted_at !== null
+
           return (
             <article key={post.id}>
-              <Author
-                post={post}
-                blockNumber={
-                  post.content_block_id ? blockNumber.get(post.content_block_id) : undefined
-                }
-              />
-              <p className="mt-1 whitespace-pre-line">
-                {post.type === 'note' && post.status === 'approved' ? (
-                  <RichText text={post.body} />
-                ) : (
-                  post.body
-                )}
-              </p>
+              {deleted ? (
+                <p className="text-sm italic opacity-60">{post.body}</p>
+              ) : (
+                <>
+                  <Author
+                    post={post}
+                    blockNumber={
+                      post.content_block_id
+                        ? blockNumber.get(post.content_block_id)
+                        : undefined
+                    }
+                  />
+                  <PostBody post={post} />
 
-              {post.type === 'note' && post.edited_at && (
-                <p className="text-xs opacity-50">disunting lorekeeper</p>
-               )}
+                  {post.type === 'note' && post.evidence_text && (
+                    <p className="mt-2 border-l-2 border-gray-400 pl-3 text-sm opacity-80">
+                      <span className="font-medium">Bukti:</span> {post.evidence_text}
+                    </p>
+                  )}
+                  {post.type === 'note' && <Attachments items={post.note_attachments} />}
 
-              {post.type === 'note' && post.evidence_text && (
-                <p className="mt-2 border-l-2 border-gray-400 pl-3 text-sm opacity-80">
-                  <span className="font-medium">Bukti:</span> {post.evidence_text}
-                </p>
-              )}
+                  {post.type === 'note' && (
+                    <div className="mt-2">
+                      <VoteControl post={post} userId={user?.id ?? null} />
+                    </div>
+                  )}
 
-              <Attachments items={post.note_attachments} />
-
-              {post.type === 'note' && (
-                <div className="mt-2">
-                    <VoteControl post={post} userId={user?.id ?? null} />
-                </div>
+                  <CommentControls post={post} user={user} />
+                </>
               )}
 
               {replies.length > 0 && (
@@ -181,13 +257,14 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                   {replies.map((reply) => (
                     <div key={reply.id}>
                       <Author post={reply} />
-                      <p className="mt-1 whitespace-pre-line">{reply.body}</p>
+                      <PostBody post={reply} />
+                      <CommentControls post={reply} user={user} />
                     </div>
                   ))}
                 </div>
               )}
 
-              {user && (
+              {user && !deleted && (
                 <details className="mt-2 text-sm">
                   <summary className="cursor-pointer underline">Balas</summary>
                   <div className="mt-2">
