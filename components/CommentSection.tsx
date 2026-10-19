@@ -8,7 +8,8 @@ import RelativeTime from '@/components/RelativeTime'
 import ActionForm from '@/components/ActionForm'
 import Attachments, { type Attachment } from '@/components/Attachments'
 import { toggleVote } from '@/app/actions/votes'
-import { editComment, deleteComment } from '@/app/actions/posts'
+import NoteEditForm from '@/components/NoteEditForm'
+import { editComment, deleteComment, withdrawNote } from '@/app/actions/posts'
 
 type Post = {
   id: string
@@ -162,6 +163,54 @@ function CommentControls({ post, user }: { post: Post; user: CurrentUser | null 
   )
 }
 
+   // Edit dan tarik note: hanya penulisnya, dan hanya sebelum approved/rejected
+function NoteControls({ post, user }: { post: Post; user: CurrentUser | null }) {
+    if (!user || post.type !== 'note' || post.deleted_at) return null
+    if (post.author_id !== user.id) return null
+    if (post.status !== 'submitted' && post.status !== 'under_review') return null
+
+    return (
+      <div className="mt-2 flex flex-wrap gap-4 text-sm">
+        <details>
+         <summary className="cursor-pointer underline">Edit catatan</summary>
+         <div className="mt-2 rounded border border-gray-400 p-3">
+           <p className="mb-2 text-xs opacity-70">
+             Mengedit mengembalikan catatan ke antrian review dan mereset dukungan (vote).
+            </p>
+           <NoteEditForm
+              key={`${post.id}-${post.edited_at ?? 'awal'}`}
+              postId={post.id}
+              userId={user.id}
+              initialBody={post.body}
+              initialEvidence={post.evidence_text ?? ''}
+              existing={post.note_attachments.map((a) => ({
+               id: a.id,
+               file_name: a.file_name,
+              file_type: a.file_type,
+             }))}
+           />
+         </div>
+        </details>
+
+        <details>
+        <summary className="cursor-pointer text-red-500 underline">Tarik catatan</summary>
+        <ActionForm
+          action={withdrawNote}
+          submitLabel="Ya, tarik catatan"
+          buttonClassName="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="mt-2 space-y-2"
+         >
+        <input type="hidden" name="postId" value={post.id} />
+        <p className="text-xs text-red-500">
+          Isi, bukti, lampiran, dan dukungan catatan ini akan dihapus. Balasan di
+          bawahnya tetap ada.
+        </p>
+        </ActionForm>
+       </details>
+    </div>
+  )
+}
+
 export default async function CommentSection({ entryId, blocks }: Props) {
   const user = await getCurrentUser()
   const supabase = await createClient()
@@ -247,6 +296,7 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                       <VoteControl post={post} userId={user?.id ?? null} />
                     </div>
                   )}
+                  <NoteControls post={post} user={user} />
 
                   <CommentControls post={post} user={user} />
                 </>

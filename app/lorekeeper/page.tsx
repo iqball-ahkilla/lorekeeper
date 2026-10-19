@@ -5,10 +5,7 @@ import ReviewCard, { type ReviewNote } from '@/components/ReviewCard'
 
 import type { LinkTarget } from '@/components/LinkTextarea'
 
-// const SELECT =
-//   'id, status, body, evidence_text, created_at, edited_at, profiles!author_id(username), content_blocks(body), lore_entries(title, slug, note_votes(user_id), subsections(slug, regions(slug)))'
-
-  const SELECT =
+const SELECT =
   'id, status, body, evidence_text, created_at, edited_at, note_votes(user_id), profiles!author_id(username), content_blocks(body), lore_entries(title, slug, subsections(slug, regions(slug))), note_attachments(id, file_path, file_name, file_type)'
 
 async function LorekeeperContent() {
@@ -19,6 +16,7 @@ async function LorekeeperContent() {
     .from('community_posts')
     .select(SELECT)
     .eq('type', 'note')
+    .is('deleted_at', null)
     .in('status', ['submitted', 'under_review'])
     .order('created_at', { ascending: true })
 
@@ -26,6 +24,7 @@ async function LorekeeperContent() {
     .from('community_posts')
     .select(SELECT)
     .eq('type', 'note')
+    .is('deleted_at', null)
     .eq('status', 'approved')
     .order('reviewed_at', { ascending: false })
     .limit(20)

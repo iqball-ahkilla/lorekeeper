@@ -52,6 +52,7 @@ async function ProfileContent({ params }: { params: Params }) {
     .eq('author_id', id)
     .eq('type', 'note')
     .eq('status', 'approved')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   const notes = (data ?? []) as unknown as ProfileNote[]

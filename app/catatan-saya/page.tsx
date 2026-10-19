@@ -49,6 +49,7 @@ async function MyNotesContent() {
     )
     .eq('author_id', user.id)
     .eq('type', 'note')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   const notes = (data ?? []) as unknown as MyNote[]
