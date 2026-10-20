@@ -39,6 +39,7 @@ export default async function Navbar() {
             <>
               <Link href="/lorekeeper" className="underline">Panel</Link>
               <Link href="/lorekeeper/konten" className="underline">Kelola</Link>
+              <Link href="/lorekeeper/riwayat" className="underline">Riwayat</Link>
             </>
           )}
           
