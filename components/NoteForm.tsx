@@ -23,6 +23,17 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
   const [uploading, setUploading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
+  const uploadedRef = useRef<string[]>([])
+
+  // Hasil pengajuan: kalau gagal, buang file yang terlanjur terunggah
+  useEffect(() => {
+    if (!state) return
+    if (state.error !== null && uploadedRef.current.length > 0) {
+      void createClient().storage.from('evidence').remove(uploadedRef.current)
+    }
+    uploadedRef.current = []
+  }, [state])
+
   // Kosongkan form setelah note berhasil dikirim
   useEffect(() => {
     if (state && state.error === null) formRef.current?.reset()
@@ -84,6 +95,8 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
       setUploading(false)
     }
 
+    uploadedRef.current = uploaded.map((u) => u.path)
+
     formData.delete('files')
     formData.set('attachments', JSON.stringify(uploaded))
     startTransition(() => formAction(formData))
@@ -141,56 +154,3 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
     </form>
   )
 }
-
-// 'use client'
-
-// import { useActionState } from 'react'
-// import { submitNote } from '@/app/actions/comments'
-
-// type Props = {
-//   entryId: string
-//   blocks: { id: string; preview: string }[]
-// }
-
-// const fieldClass = 'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2'
-
-// export default function NoteForm({ entryId, blocks }: Props) {
-//   const [state, formAction, pending] = useActionState(submitNote, null)
-
-//   return (
-//     <form action={formAction} className="space-y-3">
-//       <input type="hidden" name="entryId" value={entryId} />
-
-//       <label className="block text-sm">
-//         Paragraf yang dicatat
-//         <select name="contentBlockId" required className={fieldClass}>
-//           {blocks.map((b, i) => (
-//             <option key={b.id} value={b.id}>
-//               Paragraf {i + 1}: {b.preview}
-//             </option>
-//           ))}
-//         </select>
-//       </label>
-
-//       <label className="block text-sm">
-//         Catatan / teori
-//         <textarea name="body" required maxLength={2000} rows={3} className={fieldClass} />
-//       </label>
-
-//       <label className="block text-sm">
-//         Bukti (kutipan teks resmi atau nama buku di dalam game)
-//         <textarea name="evidence" required maxLength={2000} rows={3} className={fieldClass} />
-//       </label>
-
-//       {state?.error && <p className="text-sm text-red-500">{state.error}</p>}
-
-//       <button
-//         type="submit"
-//         disabled={pending}
-//         className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
-//       >
-//         {pending ? 'Mengirim...' : 'Ajukan'}
-//       </button>
-//     </form>
-//   )
-// }

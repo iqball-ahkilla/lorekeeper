@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { requireLorekeeper } from '@/lib/auth'
 
+import { logAction } from '@/lib/audit'
+
 export type ContentState = { ok: boolean; message: string } | null
 
 export async function updateParagraph(
@@ -31,6 +33,8 @@ export async function updateParagraph(
   if (error || !data || data.length === 0) {
     return { ok: false, message: 'Gagal menyimpan.' }
   }
+
+  await logAction({ action: 'block.edit', targetType: 'content_block', targetId: blockId })
 
   revalidatePath('/lore', 'layout')
   revalidatePath('/lorekeeper', 'layout')

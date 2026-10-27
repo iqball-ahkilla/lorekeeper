@@ -5,6 +5,9 @@ import { supabase } from '@/lib/supabase'
 
 import RichText from '@/components/RichText'
 
+import { formatDateWIB } from '@/lib/time'
+import RelativeTime from '@/components/RelativeTime'
+
 
 type Params = Promise<{ id: string }>
 
@@ -22,13 +25,13 @@ type ProfileNote = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+// function formatDate(iso: string) {
+//   return new Date(iso).toLocaleDateString('id-ID', {
+//     day: 'numeric',
+//     month: 'short',
+//     year: 'numeric',
+//   })
+// }
 
 async function ProfileContent({ params }: { params: Params }) {
   const { id } = await params
@@ -49,6 +52,7 @@ async function ProfileContent({ params }: { params: Params }) {
     .eq('author_id', id)
     .eq('type', 'note')
     .eq('status', 'approved')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   const notes = (data ?? []) as unknown as ProfileNote[]
@@ -64,7 +68,7 @@ async function ProfileContent({ params }: { params: Params }) {
         )}
       </h1>
       <p className="mt-1 text-sm opacity-70">
-        Bergabung {formatDate(profile.created_at)} · {notes.length} catatan disetujui
+        Bergabung {formatDateWIB(profile.created_at)} · {notes.length} catatan disetujui
       </p>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">Catatan yang disetujui</h2>
@@ -88,7 +92,7 @@ async function ProfileContent({ params }: { params: Params }) {
                 <p className="italic text-yellow-600">
                   <RichText text={n.body} />
                 </p>
-                <p className="text-xs opacity-50">{formatDate(n.created_at)}</p>
+                <p className="text-xs opacity-50"><RelativeTime iso={n.created_at} /></p>
               </article>
             )
           })}
