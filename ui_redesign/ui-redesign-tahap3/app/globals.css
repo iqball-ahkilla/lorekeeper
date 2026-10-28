@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Tema "Arsip Teyvat" (diambil dari desain Google Stitch).
+   Semua warna dipakai lewat nama token: bg-ink, text-gold, border-line, dst.
+   Mengubah palet cukup dilakukan di blok ini.
+------------------------------------------------------------------- */
+@theme {
+  --color-ink: #0b1322; /* latar halaman */
+  --color-deep: #060e1d; /* latar lebih gelap (kotak kutipan, input) */
+  --color-surface: #151d2d; /* kartu */
+  --color-surface-2: #1c2638; /* kartu saat hover / elemen terangkat */
+  --color-line: #2a3347; /* garis tepi */
+  --color-gold: #e3c284; /* aksen utama */
+  --color-gold-dim: #c5a66a; /* aksen redup / label kecil */
+  --color-parch: #f0e9db; /* judul besar halaman entri */
+  --color-fg: #dbe2f8; /* teks utama */
+  --color-muted: #a7acb7; /* teks sekunder */
+  --color-faint: #998f81; /* teks tersier */
+  --color-sky: #a3cbf2; /* aksen biru (catatan komunitas) */
+  --color-rose: #f2a5a0; /* aksen penolakan */
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    @apply bg-ink text-fg antialiased;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+
+  ::selection {
+    background: rgb(227 194 132 / 0.3);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+/* Komponen dasar yang dipakai berulang di banyak halaman */
+@layer components {
+  .page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-gold-dim;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-surface;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded border border-line bg-deep/60 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-gold-dim;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-medium text-fg transition-colors hover:bg-surface-2;
+  }
+
+  /* Kolom isian formulir (input, textarea, select) */
+  .field {
+    @apply w-full rounded-md border border-line bg-deep px-3 py-2 text-sm text-fg placeholder:text-faint focus:border-gold/60 focus:outline-none;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-rose/90 px-3 py-1.5 text-sm font-semibold text-ink transition-colors hover:bg-rose;
+  }
+
+  .link-gold {
+    @apply inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-parch;
+  }
+
+  /* Latar hero: gradien + titik bintang, tanpa file gambar.
+     Nanti bisa ditimpa gambar sendiri, mis. url(/hero.jpg) di paling depan. */
+  .hero-bg {
+    background-color: #060e1d;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 22%, rgb(255 255 255 / 0.55), transparent 100%),
+      radial-gradient(1px 1px at 28% 60%, rgb(255 255 255 / 0.4), transparent 100%),
+      radial-gradient(1.5px 1.5px at 63% 18%, rgb(255 255 255 / 0.5), transparent 100%),
+      radial-gradient(1px 1px at 78% 48%, rgb(255 255 255 / 0.35), transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 14%, rgb(255 255 255 / 0.55), transparent 100%),
+      radial-gradient(ellipse 55% 75% at 88% 0%, rgb(163 203 242 / 0.16), transparent 62%),
+      radial-gradient(ellipse 45% 60% at 8% 100%, rgb(227 194 132 / 0.1), transparent 62%),
+      linear-gradient(to bottom, #0e1830, #060e1d);
+  }
+}
