@@ -1,9 +1,9 @@
 export type ContentStatus = 'draft' | 'published' | 'archived'
 
 const STYLE: Record<ContentStatus, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'bg-yellow-500/20 text-yellow-600' },
-  published: { label: 'Terbit', className: 'bg-green-500/20 text-green-600' },
-  archived: { label: 'Arsip', className: 'bg-gray-500/20 text-gray-500' },
+  draft: { label: 'Draft', className: 'bg-gold/15 text-gold' },
+  published: { label: 'Terbit', className: 'bg-emerald-500/15 text-emerald-300' },
+  archived: { label: 'Arsip', className: 'bg-white/10 text-muted' },
 }
 
 export default function StatusBadge({

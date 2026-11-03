@@ -6,6 +6,7 @@ import { createRegion, createSubsection, createEntry } from '@/app/actions/struc
 import ActionForm from '@/components/ActionForm'
 import ItemControls from '@/components/ItemControls'
 import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
+import Breadcrumb from '@/components/Breadcrumb'
 
 type Entry = {
   id: string
@@ -38,8 +39,7 @@ type Reg = {
   subsections: Sub[]
 }
 
-const inputClass =
-  'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm'
+const inputClass = 'field mt-1 py-1.5'
 
 async function KontenContent() {
   await requireLorekeeper()
@@ -61,14 +61,25 @@ async function KontenContent() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">Kelola konten</h1>
-      <p className="mt-1 text-sm opacity-70">
-        Konten baru selalu dimulai sebagai draft. Hanya item yang terbit (dan induknya
-        terbit) yang terlihat publik.
-      </p>
+      <Breadcrumb
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: 'Panel review', href: '/lorekeeper' },
+          { label: 'Kelola konten' },
+        ]}
+      />
 
-      <details className="mt-6 rounded border border-gray-400 p-4">
-        <summary className="cursor-pointer text-sm font-semibold">
+      <header className="mt-6 max-w-2xl">
+        <p className="eyebrow">Panel lorekeeper</p>
+        <h1 className="mt-1 font-serif text-4xl font-semibold text-fg">Kelola Konten</h1>
+        <p className="mt-2 text-sm text-muted">
+          Konten baru selalu dimulai sebagai draft. Hanya item yang terbit (dan induknya
+          terbit) yang terlihat publik.
+        </p>
+      </header>
+
+      <details className="card mt-8 p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-gold">
           + Tambah wilayah / topik
         </summary>
         <ActionForm
@@ -77,22 +88,22 @@ async function KontenContent() {
           resetOnSuccess
           className="mt-3 space-y-2"
         >
-          <label className="block text-xs">
+          <label className="block text-xs text-muted">
             Nama
             <input name="name" required className={inputClass} />
           </label>
-          <label className="block text-xs">
+          <label className="block text-xs text-muted">
             Jenis
             <select name="kind" defaultValue="region" className={inputClass}>
               <option value="region">Wilayah</option>
               <option value="topic">Topik</option>
             </select>
           </label>
-          <label className="block text-xs">
+          <label className="block text-xs text-muted">
             Deskripsi (opsional)
             <textarea name="description" rows={2} className={inputClass} />
           </label>
-          <label className="block text-xs">
+          <label className="block text-xs text-muted">
             Slug (opsional, otomatis dari nama)
             <input name="slug" className={inputClass} />
           </label>
@@ -101,16 +112,16 @@ async function KontenContent() {
 
       {groups.map((g) =>
         g.items.length === 0 ? null : (
-          <section key={g.title} className="mt-8">
-            <h2 className="mb-3 text-sm font-semibold uppercase opacity-60">{g.title}</h2>
+          <section key={g.title} className="mt-10">
+            <h2 className="eyebrow mb-3">{g.title}</h2>
 
             <div className="space-y-3">
               {g.items.map((r) => (
-                <details key={r.id} className="rounded border border-gray-400 p-4">
+                <details key={r.id} className="card p-4">
                   <summary className="flex cursor-pointer flex-wrap items-center gap-2">
-                    <span className="font-semibold">{r.name}</span>
+                    <span className="font-serif text-lg font-semibold text-fg">{r.name}</span>
                     <StatusBadge status={r.status} />
-                    <span className="text-xs opacity-50">/{r.slug}</span>
+                    <span className="text-xs text-faint">/{r.slug}</span>
                   </summary>
 
                   <ItemControls
@@ -127,9 +138,9 @@ async function KontenContent() {
                     }}
                   />
 
-                  <details className="mt-4 rounded border border-gray-400 p-3">
-                    <summary className="cursor-pointer text-xs font-semibold">
-                      + Tambah sub-section
+                  <details className="mt-4 rounded-md border border-line bg-deep/40 p-3">
+                    <summary className="cursor-pointer text-xs font-semibold text-gold">
+                      + Tambah sub-bagian
                     </summary>
                     <ActionForm
                       action={createSubsection}
@@ -138,15 +149,15 @@ async function KontenContent() {
                       className="mt-2 space-y-2"
                     >
                       <input type="hidden" name="regionId" value={r.id} />
-                      <label className="block text-xs">
+                      <label className="block text-xs text-muted">
                         Nama
                         <input name="name" required className={inputClass} />
                       </label>
-                      <label className="block text-xs">
+                      <label className="block text-xs text-muted">
                         Nama alternatif (opsional)
                         <input name="alt_name" className={inputClass} />
                       </label>
-                      <label className="block text-xs">
+                      <label className="block text-xs text-muted">
                         Slug (opsional)
                         <input name="slug" className={inputClass} />
                       </label>
@@ -159,14 +170,14 @@ async function KontenContent() {
                         a.title.localeCompare(b.title)
                       )
                       return (
-                        <details key={s.id} className="rounded border border-gray-400 p-3">
+                        <details key={s.id} className="rounded-md border border-line bg-deep/30 p-3">
                           <summary className="flex cursor-pointer flex-wrap items-center gap-2">
-                            <span className="font-medium">{s.name}</span>
+                            <span className="font-medium text-fg">{s.name}</span>
                             {s.alt_name && (
-                              <span className="text-xs opacity-50">{s.alt_name}</span>
+                              <span className="text-xs text-faint">{s.alt_name}</span>
                             )}
                             <StatusBadge status={s.status} />
-                            <span className="text-xs opacity-50">/{s.slug}</span>
+                            <span className="text-xs text-faint">/{s.slug}</span>
                           </summary>
 
                           <ItemControls
@@ -182,9 +193,9 @@ async function KontenContent() {
                             }}
                           />
 
-                          <details className="mt-3 rounded border border-gray-400 p-3">
-                            <summary className="cursor-pointer text-xs font-semibold">
-                              + Tambah entry
+                          <details className="mt-3 rounded-md border border-line p-3">
+                            <summary className="cursor-pointer text-xs font-semibold text-gold">
+                              + Tambah entri
                             </summary>
                             <ActionForm
                               action={createEntry}
@@ -193,11 +204,11 @@ async function KontenContent() {
                               className="mt-2 space-y-2"
                             >
                               <input type="hidden" name="subsectionId" value={s.id} />
-                              <label className="block text-xs">
+                              <label className="block text-xs text-muted">
                                 Judul
                                 <input name="title" required className={inputClass} />
                               </label>
-                              <label className="block text-xs">
+                              <label className="block text-xs text-muted">
                                 Slug (opsional)
                                 <input name="slug" className={inputClass} />
                               </label>
@@ -206,20 +217,20 @@ async function KontenContent() {
 
                           <ul className="mt-3 space-y-3">
                             {entries.map((e) => (
-                              <li key={e.id} className="rounded border border-gray-400 p-3">
+                              <li key={e.id} className="rounded-md border border-line p-3">
                                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                                  <span className="font-medium">{e.title}</span>
+                                  <span className="font-medium text-fg">{e.title}</span>
                                   <StatusBadge status={e.status} />
-                                  <span className="text-xs opacity-50">/{e.slug}</span>
+                                  <span className="text-xs text-faint">/{e.slug}</span>
                                   <Link
                                     href={`/lore/${r.slug}/${s.slug}/${e.slug}`}
-                                    className="text-xs underline"
+                                    className="text-xs font-medium text-gold hover:underline"
                                   >
                                     Buka
                                   </Link>
                                   <Link
                                     href={`/lorekeeper/edit/${r.slug}/${s.slug}/${e.slug}`}
-                                    className="text-xs underline"
+                                    className="text-xs font-medium text-gold hover:underline"
                                   >
                                     Edit isi
                                   </Link>
@@ -238,14 +249,14 @@ async function KontenContent() {
                               </li>
                             ))}
                             {entries.length === 0 && (
-                              <li className="text-xs opacity-60">Belum ada entry.</li>
+                              <li className="text-xs text-faint">Belum ada entri.</li>
                             )}
                           </ul>
                         </details>
                       )
                     })}
                     {r.subsections.length === 0 && (
-                      <p className="text-xs opacity-60">Belum ada sub-section.</p>
+                      <p className="text-xs text-faint">Belum ada sub-bagian.</p>
                     )}
                   </div>
                 </details>
@@ -260,11 +271,8 @@ async function KontenContent() {
 
 export default function KontenPage() {
   return (
-    <main className="mx-auto w-full max-w-3xl p-8">
-      <p className="mb-4 text-sm">
-        <Link href="/lorekeeper" className="underline">← Panel lorekeeper</Link>
-      </p>
-      <Suspense fallback={<p>Memuat...</p>}>
+    <main className="page max-w-4xl flex-1 py-8 sm:py-10">
+      <Suspense fallback={<div className="card h-64 animate-pulse" />}>
         <KontenContent />
       </Suspense>
     </main>

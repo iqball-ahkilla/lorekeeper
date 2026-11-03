@@ -20,8 +20,8 @@ type Props = {
 }
 
 const KIND_LABEL: Record<string, string> = {
-  region: 'Region',
-  subsection: 'Sub-section',
+  region: 'Wilayah',
+  subsection: 'Sub-bagian',
   entry: 'Lore',
 }
 
@@ -125,7 +125,7 @@ export default function LinkTextarea({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded border border-gray-400 bg-white text-sm text-black shadow dark:bg-neutral-900 dark:text-white"
+          className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-line bg-surface-2 text-sm text-fg shadow-xl shadow-black/40"
         >
           {matches.map((t, i) => (
             <li
@@ -137,11 +137,11 @@ export default function LinkTextarea({
                 choose(t)
               }}
               className={`cursor-pointer px-3 py-2 ${
-                i === safeIndex ? 'bg-blue-600 text-white' : ''
+                i === safeIndex ? 'bg-gold/20 text-gold' : 'hover:bg-surface'
               }`}
             >
               <span className="font-medium">{t.label}</span>
-              <span className="ml-2 text-xs opacity-70">
+              <span className="ml-2 text-xs text-muted">
                 {KIND_LABEL[t.kind] ?? t.kind} · {t.path}
               </span>
             </li>

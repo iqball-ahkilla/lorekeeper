@@ -11,7 +11,7 @@ export default function RichText({ text }: { text: string }) {
     const start = m.index ?? 0
     if (start > last) parts.push(text.slice(last, start))
     parts.push(
-      <Link key={start} href={`/lore/${m[1]}`} className="text-blue-500 hover:underline">
+      <Link key={start} href={`/lore/${m[1]}`} className="text-gold underline decoration-gold/40 underline-offset-2 hover:decoration-gold">
         {m[2]}
       </Link>
     )

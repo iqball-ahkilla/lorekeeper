@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
@@ -9,8 +8,12 @@ import BlockMedia, { type Media } from '@/components/BlockMedia'
 import RichText from '@/components/RichText'
 import EditContentLink from '@/components/EditContentLink'
 import TableOfContents from '@/components/TableOfContents'
+import Breadcrumb from '@/components/Breadcrumb'
+import { ChevronDownIcon, ChatIcon, ClockIcon } from '@/components/Icons'
+import { readMinutes } from '@/lib/text'
 
 type Params = Promise<{ region: string; subsection: string; entry: string }>
+type SearchParams = Promise<{ tampil?: string | string[] }>
 
 type Block = {
   id: string
@@ -26,7 +29,12 @@ type EntryData = {
   title: string
   status: ContentStatus
   content_blocks: Block[]
-  subsections: { name: string; status: ContentStatus; regions: { name: string; status: ContentStatus } }
+  subsections: {
+    name: string
+    alt_name: string | null
+    status: ContentStatus
+    regions: { name: string; status: ContentStatus }
+  }
 }
 
 type ApprovedRow = {
@@ -37,15 +45,24 @@ type ApprovedRow = {
   profiles: { id: string; username: string }
 }
 
-async function EntryContent({ params }: { params: Params }) {
+async function EntryContent({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: SearchParams
+}) {
   const { region, subsection, entry: entrySlug } = await params
+  const rawFilter = (await searchParams).tampil
+  const tampil = Array.isArray(rawFilter) ? rawFilter[0] : rawFilter
+  const filter = tampil === 'catatan' || tampil === 'komentar' ? tampil : undefined
 
   const supabase = await createClient()
 
   const { data } = await supabase
     .from('lore_entries')
     .select(
-      'id, title, status, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id, media_type, media_url, caption, sort_order)), subsections!inner(name, status, regions!inner(name, status))'
+      'id, title, status, content_blocks(id, body, sort_order, block_type, heading_level, block_media(id, media_type, media_url, caption, sort_order)), subsections!inner(name, alt_name, status, regions!inner(name, status))'
     )
     .eq('slug', entrySlug)
     .eq('subsections.slug', subsection)
@@ -57,9 +74,9 @@ async function EntryContent({ params }: { params: Params }) {
   const entry = data as unknown as EntryData
 
   const hidden =
-     entry.status !== 'published' ||
-     entry.subsections.status !== 'published' ||
-     entry.subsections.regions.status !== 'published'
+    entry.status !== 'published' ||
+    entry.subsections.status !== 'published' ||
+    entry.subsections.regions.status !== 'published'
 
   const { data: noteRows } = await supabase
     .from('community_posts')
@@ -89,19 +106,25 @@ async function EntryContent({ params }: { params: Params }) {
       preview: (b.block_type === 'quote' ? 'Kutipan: ' : '') + b.body.slice(0, 60),
     }))
 
+  const minutes = readMinutes(
+    entry.content_blocks.filter((b) => b.block_type !== 'heading').map((b) => b.body)
+  )
+  const hasToc = headings.length >= 2
+
   return (
     <>
-      <p className="text-sm">
-        <Link href="/" className="underline">Beranda</Link>
-        {' / '}
-        <Link href={`/lore/${region}`} className="underline">
-          {entry.subsections.regions.name}
-        </Link>
-        {' / '}
-        <Link href={`/lore/${region}/${subsection}`} className="underline">
-          {entry.subsections.name}
-        </Link>
-      </p>
+      <Breadcrumb
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: entry.subsections.regions.name, href: `/lore/${region}` },
+          {
+            label: entry.subsections.name,
+            href: `/lore/${region}/${subsection}`,
+            sub: entry.subsections.alt_name ?? undefined,
+          },
+          { label: entry.title },
+        ]}
+      />
 
       <div className="mt-2 min-h-5">
         <Suspense fallback={null}>
@@ -110,85 +133,125 @@ async function EntryContent({ params }: { params: Params }) {
       </div>
 
       {hidden && (
-        <p className="mt-3 rounded border border-yellow-600/50 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700">
-          Pratinjau: halaman ini tidak terlihat oleh publik (entry: {entry.status},
-          sub-section: {entry.subsections.status}, induk: {entry.subsections.regions.status}).
+        <p className="mt-3 rounded-md border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">
+          Pratinjau: halaman ini tidak terlihat oleh publik (entri: {entry.status},
+          sub-bagian: {entry.subsections.status}, induk: {entry.subsections.regions.status}).
         </p>
       )}
-      <h1 className="mt-4 flex items-center gap-3 text-2xl font-bold">
-        {entry.title}
-        <StatusBadge status={entry.status} hidePublished />
-      </h1>
 
-      {/* <h1 className="mt-4 text-2xl font-bold">{entry.title}</h1> */}
+      <header className="mt-6 max-w-3xl">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="chip border-gold/30 text-gold">Lore resmi</span>
+          <span className="inline-flex items-center gap-1.5 text-xs text-faint">
+            <ClockIcon className="h-3.5 w-3.5" />
+            {minutes} menit baca
+          </span>
+          <StatusBadge status={entry.status} hidePublished />
+        </div>
+        <h1 className="mt-3 font-serif text-3xl font-semibold leading-tight text-parch sm:text-5xl">
+          {entry.title}
+        </h1>
+      </header>
 
-      <TableOfContents headings={headings} />
+      <div
+        className={`mt-8 grid gap-8 ${hasToc ? 'lg:grid-cols-[minmax(0,1fr)_18rem]' : ''}`}
+      >
+        {/* Daftar isi: di atas artikel pada layar kecil, di sisi kanan (menempel) pada layar lebar */}
+        {hasToc && (
+          <aside className="lg:order-2 lg:sticky lg:top-24 lg:self-start">
+            <TableOfContents headings={headings} />
+          </aside>
+        )}
 
-      <div className="mt-6 space-y-6">
-        {entry.content_blocks.map((block) => {
-          const notes = notesByBlock.get(block.id) ?? []
+        <article className="min-w-0 max-w-3xl space-y-6 lg:order-1">
+          {entry.content_blocks.map((block) => {
+            const notes = notesByBlock.get(block.id) ?? []
 
-          if (block.block_type === 'heading') {
-            const Tag = block.heading_level === 3 ? 'h3' : 'h2'
+            if (block.block_type === 'heading') {
+              const Tag = block.heading_level === 3 ? 'h3' : 'h2'
+              return (
+                <div key={block.id}>
+                  <BlockMedia items={block.block_media} />
+                  <Tag
+                    id={`blok-${block.id}`}
+                    className={
+                      block.heading_level === 3
+                        ? 'scroll-mt-24 pt-2 font-serif text-xl font-semibold text-fg'
+                        : 'scroll-mt-24 border-t border-line pt-6 font-serif text-2xl font-semibold text-fg'
+                    }
+                  >
+                    {block.body}
+                  </Tag>
+                </div>
+              )
+            }
+
             return (
-              <div key={block.id}>
+              <section key={block.id}>
                 <BlockMedia items={block.block_media} />
-                <Tag
-                  id={`blok-${block.id}`}
-                  className={
-                    block.heading_level === 3
-                      ? 'scroll-mt-4 pt-2 text-lg font-semibold'
-                      : 'scroll-mt-4 pt-4 text-xl font-bold'
-                  }
-                >
-                  {block.body}
-                </Tag>
-              </div>
+
+                {block.block_type === 'quote' ? (
+                  <blockquote className="whitespace-pre-line rounded-r-md border-l-2 border-gold-dim bg-deep/60 px-5 py-4 italic leading-relaxed text-muted">
+                    <RichText text={block.body} />
+                  </blockquote>
+                ) : (
+                  <p className="whitespace-pre-line text-[17px] leading-8 text-fg">
+                    <RichText text={block.body} />
+                  </p>
+                )}
+
+                {/* Catatan komunitas tersembunyi secara default; pembaca membukanya per paragraf */}
+                {notes.length > 0 && (
+                  <details className="group mt-2">
+                    <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded px-1.5 py-0.5 text-xs text-faint transition-colors hover:bg-surface hover:text-gold [&::-webkit-details-marker]:hidden">
+                      <ChatIcon className="h-3.5 w-3.5" />
+                      <span>{notes.length} catatan komunitas</span>
+                      <ChevronDownIcon className="h-3 w-3 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="mt-1 space-y-2">
+                      {notes.map((n) => (
+                        <ApprovedNote
+                          key={n.id}
+                          body={n.body}
+                          author={n.profiles.username}
+                          authorId={n.profiles.id}
+                          edited={n.edited_at !== null}
+                        />
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </section>
             )
-          }
-
-          return (
-            <section key={block.id}>
-              <BlockMedia items={block.block_media} />
-
-              {block.block_type === 'quote' ? (
-                <blockquote className="whitespace-pre-line border-l-4 border-gray-400 pl-4 italic leading-relaxed opacity-90">
-                  <RichText text={block.body} />
-                </blockquote>
-              ) : (
-                <p className="whitespace-pre-line leading-relaxed">
-                  <RichText text={block.body} />
-                </p>
-              )}
-
-              {notes.map((n) => (
-                <ApprovedNote
-                  key={n.id}
-                  body={n.body}
-                  author={n.profiles.username}
-                  authorId={n.profiles.id}
-                  edited={n.edited_at !== null}
-                />
-              ))}
-            </section>
-          )
-        })}
+          })}
+        </article>
       </div>
 
-      <section className="mt-12 border-t border-gray-400 pt-6">
-        <Suspense fallback={<p>Memuat komentar...</p>}>
-          <CommentSection entryId={entry.id} blocks={noteTargets} />
+      <section id="komunitas" className="mt-14 scroll-mt-24 border-t border-line pt-8">
+        <Suspense fallback={<div className="card h-40 animate-pulse" />}>
+          <CommentSection
+            entryId={entry.id}
+            blocks={noteTargets}
+            basePath={`/lore/${region}/${subsection}/${entrySlug}`}
+            filter={filter}
+          />
         </Suspense>
       </section>
     </>
   )
 }
 
-export default function EntryPage({ params }: { params: Params }) {
+export default function EntryPage({
+  params,
+  searchParams,
+}: {
+  params: Params
+  searchParams: SearchParams
+}) {
   return (
-    <main className="mx-auto w-full max-w-2xl p-8">
-      <Suspense fallback={<p>Memuat...</p>}>
-        <EntryContent params={params} />
+    <main className="page flex-1 py-8 sm:py-10">
+      <Suspense fallback={<div className="card h-64 animate-pulse" />}>
+        <EntryContent params={params} searchParams={searchParams} />
       </Suspense>
     </main>
   )

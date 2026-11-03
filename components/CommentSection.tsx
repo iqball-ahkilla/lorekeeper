@@ -4,6 +4,7 @@ import { getCurrentUser, type CurrentUser } from '@/lib/auth'
 import CommentForm from '@/components/CommentForm'
 import NoteForm from '@/components/NoteForm'
 import RichText from '@/components/RichText'
+import { ChevronDownIcon } from '@/components/Icons'
 import RelativeTime from '@/components/RelativeTime'
 import ActionForm from '@/components/ActionForm'
 import Attachments, { type Attachment } from '@/components/Attachments'
@@ -32,10 +33,11 @@ type Post = {
 type Props = {
   entryId: string
   blocks: { id: string; preview: string }[]
+  basePath: string // alamat halaman entri, untuk tautan tab filter
+  filter?: 'catatan' | 'komentar'
 }
 
-const fieldClass =
-  'w-full rounded border border-gray-400 bg-transparent px-3 py-2 text-sm'
+const fieldClass = 'field'
 
 // "diedit" kalau penulisnya sendiri yang mengubah, selain itu lorekeeper
 function editedLabel(post: Post) {
@@ -52,39 +54,39 @@ function Author({ post, blockNumber }: { post: Post; blockNumber?: number }) {
     <p className="flex flex-wrap items-center gap-2 text-sm">
       <Link
         href={`/profile/${post.profiles.id}`}
-        className="font-semibold hover:underline"
+        className="font-semibold text-fg hover:text-gold"
       >
         {post.profiles.username}
       </Link>
       {post.profiles.role === 'lorekeeper' && (
-        <span className="rounded bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-600">
+        <span className="rounded bg-gold/15 px-2 py-0.5 text-xs font-semibold text-gold">
           lorekeeper
         </span>
       )}
       {post.type === 'note' && (
-        <span className="rounded bg-blue-500/20 px-2 py-0.5 text-xs text-blue-500">
-          Lore Entry{blockNumber ? ` · paragraf ${blockNumber}` : ''}
+        <span className="rounded bg-sky/15 px-2 py-0.5 text-xs font-semibold text-sky">
+          Catatan komunitas{blockNumber ? ` · paragraf ${blockNumber}` : ''}
         </span>
       )}
       {post.status === 'under_review' && (
-        <span className="rounded bg-orange-500/20 px-2 py-0.5 text-xs text-orange-500">
-          Under review by lorekeeper
+        <span className="rounded bg-amber-400/15 px-2 py-0.5 text-xs font-semibold text-amber-300">
+          Sedang direview lorekeeper
         </span>
       )}
       {post.status === 'approved' && (
-        <span className="rounded bg-green-500/20 px-2 py-0.5 text-xs text-green-600">
+        <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-300">
           Disetujui
         </span>
       )}
-      <RelativeTime iso={post.created_at} className="opacity-50" />
-      {edited && <span className="text-xs opacity-50">· {edited}</span>}
+      <RelativeTime iso={post.created_at} className="text-faint" />
+      {edited && <span className="text-xs text-faint">· {edited}</span>}
     </p>
   )
 }
 
 function PostBody({ post }: { post: Post }) {
   return (
-    <p className="mt-1 whitespace-pre-line">
+    <p className="mt-2 whitespace-pre-line leading-relaxed text-fg/90">
       {post.type === 'note' && post.status === 'approved' ? (
         <RichText text={post.body} />
       ) : (
@@ -99,7 +101,11 @@ function VoteControl({ post, userId }: { post: Post; userId: string | null }) {
   const voted = userId !== null && post.note_votes.some((v) => v.user_id === userId)
 
   if (!userId || post.author_id === userId) {
-    return <span className="text-sm opacity-70">▲ {count}</span>
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-sm text-muted">
+        ▲ {count}
+      </span>
+    )
   }
 
   return (
@@ -107,7 +113,11 @@ function VoteControl({ post, userId }: { post: Post; userId: string | null }) {
       <input type="hidden" name="postId" value={post.id} />
       <button
         type="submit"
-        className={`text-sm ${voted ? 'font-semibold text-blue-500' : 'opacity-70'}`}
+        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition-colors ${
+          voted
+            ? 'border-gold/50 bg-gold/10 font-semibold text-gold'
+            : 'border-line text-muted hover:border-gold/40 hover:text-fg'
+        }`}
       >
         ▲ {count}
         {voted ? ' · didukung' : ''}
@@ -128,7 +138,7 @@ function CommentControls({ post, user }: { post: Post; user: CurrentUser | null 
     <div className="mt-2 flex flex-wrap gap-4 text-sm">
       {isAuthor && (
         <details>
-          <summary className="cursor-pointer underline">Edit</summary>
+          <summary className="cursor-pointer text-muted hover:text-fg">Edit</summary>
           <ActionForm action={editComment} submitLabel="Simpan" className="mt-2 space-y-2">
             <input type="hidden" name="postId" value={post.id} />
             <textarea
@@ -144,17 +154,17 @@ function CommentControls({ post, user }: { post: Post; user: CurrentUser | null 
       )}
 
       <details>
-        <summary className="cursor-pointer text-red-500 underline">
+        <summary className="cursor-pointer text-rose hover:underline">
           {isAuthor ? 'Hapus' : 'Hapus (moderator)'}
         </summary>
         <ActionForm
           action={deleteComment}
           submitLabel="Ya, hapus komentar"
-          buttonClassName="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          buttonClassName="btn-danger disabled:opacity-50"
           className="mt-2 space-y-2"
         >
           <input type="hidden" name="postId" value={post.id} />
-          <p className="text-xs text-red-500">
+          <p className="text-xs text-rose">
             Isi komentar akan dihapus permanen. Balasan di bawahnya tetap ada.
           </p>
         </ActionForm>
@@ -172,9 +182,9 @@ function NoteControls({ post, user }: { post: Post; user: CurrentUser | null }) 
     return (
       <div className="mt-2 flex flex-wrap gap-4 text-sm">
         <details>
-         <summary className="cursor-pointer underline">Edit catatan</summary>
-         <div className="mt-2 rounded border border-gray-400 p-3">
-           <p className="mb-2 text-xs opacity-70">
+         <summary className="cursor-pointer text-muted hover:text-fg">Edit catatan</summary>
+         <div className="mt-2 rounded-md border border-line bg-deep/40 p-3">
+           <p className="mb-2 text-xs text-faint">
              Mengedit mengembalikan catatan ke antrian review dan mereset dukungan (vote).
             </p>
            <NoteEditForm
@@ -193,15 +203,15 @@ function NoteControls({ post, user }: { post: Post; user: CurrentUser | null }) 
         </details>
 
         <details>
-        <summary className="cursor-pointer text-red-500 underline">Tarik catatan</summary>
+        <summary className="cursor-pointer text-rose hover:underline">Tarik catatan</summary>
         <ActionForm
           action={withdrawNote}
           submitLabel="Ya, tarik catatan"
-          buttonClassName="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          buttonClassName="btn-danger disabled:opacity-50"
           className="mt-2 space-y-2"
          >
         <input type="hidden" name="postId" value={post.id} />
-        <p className="text-xs text-red-500">
+        <p className="text-xs text-rose">
           Isi, bukti, lampiran, dan dukungan catatan ini akan dihapus. Balasan di
           bawahnya tetap ada.
         </p>
@@ -211,7 +221,7 @@ function NoteControls({ post, user }: { post: Post; user: CurrentUser | null }) 
   )
 }
 
-export default async function CommentSection({ entryId, blocks }: Props) {
+export default async function CommentSection({ entryId, blocks, basePath, filter }: Props) {
   const user = await getCurrentUser()
   const supabase = await createClient()
 
@@ -231,37 +241,121 @@ export default async function CommentSection({ entryId, blocks }: Props) {
     posts.filter((p) => p.parent_id === id && p.deleted_at === null)
   const blockNumber = new Map(blocks.map((b, i) => [b.id, i + 1]))
 
+  const noteCount = posts.filter((p) => p.type === 'note' && p.deleted_at === null).length
+  const commentCount = posts.filter((p) => p.type === 'comment' && p.deleted_at === null).length
+
   // Post utama yang sudah dihapus hanya ditampilkan kalau masih punya balasan
   const topLevel = posts.filter(
-    (p) => p.parent_id === null && (p.deleted_at === null || repliesOf(p.id).length > 0)
+    (p) =>
+      p.parent_id === null &&
+      (p.deleted_at === null || repliesOf(p.id).length > 0) &&
+      (!filter || p.type === (filter === 'catatan' ? 'note' : 'comment'))
   )
+
+  const tabs = [
+    { key: undefined, label: 'Semua', count: noteCount + commentCount },
+    { key: 'catatan', label: 'Catatan', count: noteCount },
+    { key: 'komentar', label: 'Komentar', count: commentCount },
+  ] as const
 
   return (
     <>
-      <h2 className="mb-4 text-lg font-semibold">Komunitas</h2>
-
-      {user ? (
-        <div className="space-y-3">
-          <CommentForm entryId={entryId} placeholder="Tulis komentar..." />
-
-          <details className="rounded border border-gray-400 p-3">
-            <summary className="cursor-pointer text-sm font-medium">
-              Ajukan Lore Entry (catatan dengan bukti)
-            </summary>
-            <div className="mt-3">
-              <NoteForm entryId={entryId} userId={user.id} blocks={blocks} />
-            </div>
-          </details>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow">Diskusi komunitas</p>
+          <h2 className="mt-1 font-serif text-3xl font-semibold text-fg">Komunitas</h2>
         </div>
-      ) : (
-        <p className="text-sm">
-          <Link href="/login" className="underline">Masuk</Link> untuk ikut berkomentar.
-        </p>
-      )}
 
-      <div className="mt-6 space-y-6">
+        <nav
+          className="inline-flex self-start rounded-lg border border-line bg-deep/60 p-1 sm:self-auto"
+          aria-label="Saring diskusi"
+        >
+          {tabs.map((t) => {
+            const on = t.key === filter
+            return (
+              <Link
+                key={t.label}
+                href={t.key ? `${basePath}?tampil=${t.key}#komunitas` : `${basePath}#komunitas`}
+                scroll={false}
+                aria-current={on ? 'page' : undefined}
+                className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                  on ? 'bg-surface-2 text-gold' : 'text-muted hover:text-fg'
+                }`}
+              >
+                {t.label} ({t.count})
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+
+      <details className="card mt-5 p-4 text-sm">
+        <summary className="cursor-pointer font-medium text-fg">
+          Bagaimana catatan komunitas diproses?
+        </summary>
+        <ol className="mt-3 grid gap-2 text-muted sm:grid-cols-4">
+          <li className="rounded-md border border-line p-3">
+            <span className="eyebrow">1 · Diajukan</span>
+            <span className="mt-1 block">Hanya terlihat oleh penulisnya.</span>
+          </li>
+          <li className="rounded-md border border-line p-3">
+            <span className="eyebrow">2 · Direview</span>
+            <span className="mt-1 block">Lorekeeper mulai memeriksa bukti.</span>
+          </li>
+          <li className="rounded-md border border-line p-3">
+            <span className="eyebrow">3 · Disetujui</span>
+            <span className="mt-1 block">Tampil kuning di bawah paragraf terkait.</span>
+          </li>
+          <li className="rounded-md border border-line p-3">
+            <span className="eyebrow text-rose">4 · Ditolak</span>
+            <span className="mt-1 block">Alasan hanya terlihat oleh penulis.</span>
+          </li>
+        </ol>
+      </details>
+
+      <div className="mt-5">
+        {user ? (
+          <div className="space-y-3">
+            <div className="card p-4">
+              <CommentForm entryId={entryId} placeholder="Tulis komentar..." />
+            </div>
+
+            <details className="card p-4">
+              <summary className="cursor-pointer text-sm font-medium text-gold">
+                Ajukan catatan komunitas (dengan bukti)
+              </summary>
+              <div className="mt-4">
+                <NoteForm entryId={entryId} userId={user.id} blocks={blocks} />
+              </div>
+            </details>
+          </div>
+        ) : (
+          <div className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted">
+              Kamu membaca sebagai tamu. Masuk untuk berkomentar atau mengajukan catatan
+              komunitas.
+            </p>
+            <div className="flex shrink-0 gap-2">
+              <Link href="/login" className="btn-ghost py-1.5">
+                Masuk
+              </Link>
+              <Link href="/signup" className="btn-gold py-1.5">
+                Daftar
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 space-y-4">
         {topLevel.length === 0 && (
-          <p className="text-sm opacity-70">Belum ada komentar.</p>
+          <p className="card p-6 text-sm text-muted">
+            {filter === 'catatan'
+              ? 'Belum ada catatan komunitas.'
+              : filter === 'komentar'
+                ? 'Belum ada komentar.'
+                : 'Belum ada komentar.'}
+          </p>
         )}
 
         {topLevel.map((post) => {
@@ -269,9 +363,9 @@ export default async function CommentSection({ entryId, blocks }: Props) {
           const deleted = post.deleted_at !== null
 
           return (
-            <article key={post.id}>
+            <article key={post.id} className="card p-5">
               {deleted ? (
-                <p className="text-sm italic opacity-60">{post.body}</p>
+                <p className="text-sm italic text-faint">{post.body}</p>
               ) : (
                 <>
                   <Author
@@ -285,14 +379,15 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                   <PostBody post={post} />
 
                   {post.type === 'note' && post.evidence_text && (
-                    <p className="mt-2 border-l-2 border-gray-400 pl-3 text-sm opacity-80">
-                      <span className="font-medium">Bukti:</span> {post.evidence_text}
-                    </p>
+                    <div className="mt-3 rounded-md border border-line bg-deep p-3 text-sm">
+                      <p className="eyebrow">Bukti</p>
+                      <p className="mt-1 leading-relaxed text-muted">{post.evidence_text}</p>
+                    </div>
                   )}
                   {post.type === 'note' && <Attachments items={post.note_attachments} />}
 
                   {post.type === 'note' && (
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <VoteControl post={post} userId={user?.id ?? null} />
                     </div>
                   )}
@@ -302,21 +397,9 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                 </>
               )}
 
-              {replies.length > 0 && (
-                <div className="mt-3 space-y-4 border-l border-gray-400 pl-4">
-                  {replies.map((reply) => (
-                    <div key={reply.id}>
-                      <Author post={reply} />
-                      <PostBody post={reply} />
-                      <CommentControls post={reply} user={user} />
-                    </div>
-                  ))}
-                </div>
-              )}
-
               {user && !deleted && (
-                <details className="mt-2 text-sm">
-                  <summary className="cursor-pointer underline">Balas</summary>
+                <details className="mt-3 text-sm">
+                  <summary className="cursor-pointer font-medium text-gold">Balas</summary>
                   <div className="mt-2">
                     <CommentForm
                       entryId={entryId}
@@ -326,6 +409,27 @@ export default async function CommentSection({ entryId, blocks }: Props) {
                   </div>
                 </details>
               )}
+
+              {replies.length > 0 && (
+                // Balasan tersembunyi secara default; pembaca membukanya per komentar
+                <details className="group mt-3">
+                  <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm text-faint transition-colors hover:text-gold [&::-webkit-details-marker]:hidden">
+                    <span className="group-open:hidden">Lihat {replies.length} balasan</span>
+                    <span className="hidden group-open:inline">Sembunyikan balasan</span>
+                    <ChevronDownIcon className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-3 space-y-4 border-l border-line pl-4">
+                    {replies.map((reply) => (
+                      <div key={reply.id}>
+                        <Author post={reply} />
+                        <PostBody post={reply} />
+                        <CommentControls post={reply} user={user} />
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+
             </article>
           )
         })}

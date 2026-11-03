@@ -20,7 +20,7 @@ type Props = {
 }
 
 const fieldClass =
-  'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2 text-sm'
+  'field mt-1'
 
 export default function NoteEditForm({
   postId,
@@ -149,7 +149,7 @@ export default function NoteEditForm({
 
       {existing.length > 0 && (
         <fieldset className="space-y-1 text-sm">
-          <legend className="text-xs opacity-70">Lampiran saat ini (centang untuk dipertahankan)</legend>
+          <legend className="text-xs text-faint">Lampiran saat ini (centang untuk dipertahankan)</legend>
           {existing.map((a) => (
             <label key={a.id} className="flex items-center gap-2">
               <input
@@ -175,7 +175,7 @@ export default function NoteEditForm({
       </label>
 
       {message && (
-        <p className={`text-sm ${message.ok ? 'text-green-600' : 'text-red-500'}`}>
+        <p className={`text-sm ${message.ok ? 'text-emerald-300' : 'text-rose'}`}>
           {message.text}
         </p>
       )}
@@ -183,7 +183,7 @@ export default function NoteEditForm({
       <button
         type="submit"
         disabled={busy}
-        className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="btn-gold disabled:opacity-50"
       >
         {busy ? 'Menyimpan...' : 'Simpan perubahan'}
       </button>

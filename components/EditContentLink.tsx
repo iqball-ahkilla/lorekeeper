@@ -6,7 +6,7 @@ export default async function EditContentLink({ href }: { href: string }) {
   if (user?.role !== 'lorekeeper') return null
 
   return (
-    <Link href={href} className="text-sm underline">
+    <Link href={href} className="link-gold">
       Edit teks (lorekeeper)
     </Link>
   )

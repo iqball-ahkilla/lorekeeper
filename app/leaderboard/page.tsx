@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import Avatar from '@/components/Avatar'
 
 type Row = { user_id: string; username: string; approved_notes: number }
 
@@ -12,11 +13,11 @@ async function LeaderboardContent() {
     .order('username', { ascending: true })
     .limit(20)
 
-  if (error) return <p>Gagal memuat leaderboard.</p>
+  if (error) return <p className="card p-6 text-sm text-rose">Gagal memuat leaderboard.</p>
 
   const rows = (data ?? []) as Row[]
   if (rows.length === 0) {
-    return <p className="text-sm opacity-70">Belum ada catatan yang disetujui.</p>
+    return <p className="card p-6 text-sm text-muted">Belum ada catatan yang disetujui.</p>
   }
 
   // Skor sama berarti peringkat sama
@@ -31,19 +32,31 @@ async function LeaderboardContent() {
   })
 
   return (
-    <ol className="space-y-2">
+    <ol className="space-y-3">
       {ranked.map((r) => (
-        <li
-          key={r.user_id}
-          className="flex items-center justify-between rounded border border-gray-400 px-4 py-3"
-        >
-          <span className="flex items-center gap-3">
-            <span className="w-6 text-right font-bold opacity-60">{r.rank}</span>
-            <Link href={`/profile/${r.user_id}`} className="font-medium underline">
-              {r.username}
-            </Link>
-          </span>
-          <span className="text-sm">{r.approved_notes} catatan disetujui</span>
+        <li key={r.user_id}>
+          <Link
+            href={`/profile/${r.user_id}`}
+            className={`card flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-surface-2 ${
+              r.rank <= 3 ? 'border-gold/40' : ''
+            }`}
+          >
+            <span className="flex min-w-0 items-center gap-4">
+              <span
+                className={`w-8 text-center font-serif text-2xl font-semibold ${
+                  r.rank <= 3 ? 'text-gold' : 'text-faint'
+                }`}
+              >
+                {r.rank}
+              </span>
+              <Avatar name={r.username} size="sm" />
+              <span className="truncate font-medium text-fg">{r.username}</span>
+            </span>
+            <span className="shrink-0 text-sm text-muted">
+              <span className="font-semibold text-gold">{r.approved_notes}</span> catatan
+              disetujui
+            </span>
+          </Link>
         </li>
       ))}
     </ol>
@@ -52,12 +65,16 @@ async function LeaderboardContent() {
 
 export default function LeaderboardPage() {
   return (
-    <main className="mx-auto w-full max-w-2xl p-8">
-      <h1 className="mb-1 text-2xl font-bold">Kontributor Teratas</h1>
-      <p className="mb-6 text-sm opacity-70">
-        Diurutkan berdasarkan jumlah catatan komunitas yang disetujui lorekeeper.
-      </p>
-      <Suspense fallback={<p>Memuat...</p>}>
+    <main className="page max-w-3xl flex-1 py-8 sm:py-10">
+      <header className="mb-8">
+        <p className="eyebrow">Peringkat komunitas</p>
+        <h1 className="mt-1 font-serif text-4xl font-semibold text-fg">Kontributor Teratas</h1>
+        <p className="mt-2 text-sm text-muted">
+          Diurutkan berdasarkan jumlah catatan komunitas yang disetujui lorekeeper. Skor yang
+          sama berbagi peringkat yang sama.
+        </p>
+      </header>
+      <Suspense fallback={<div className="card h-64 animate-pulse" />}>
         <LeaderboardContent />
       </Suspense>
     </main>

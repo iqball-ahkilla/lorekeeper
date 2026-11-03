@@ -15,7 +15,7 @@ type Props = {
 
 type Uploaded = { path: string; name: string; type: 'image' | 'document' }
 
-const fieldClass = 'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2'
+const fieldClass = 'field mt-1'
 
 export default function NoteForm({ entryId, userId, blocks }: Props) {
   const [state, formAction, pending] = useActionState(submitNote, null)
@@ -109,7 +109,7 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
       <input type="hidden" name="entryId" value={entryId} />
 
-      <label className="block text-sm">
+      <label className="block text-sm text-muted">
         Paragraf yang dicatat
         <select name="contentBlockId" required className={fieldClass}>
           {blocks.map((b, i) => (
@@ -120,17 +120,17 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
         </select>
       </label>
 
-      <label className="block text-sm">
+      <label className="block text-sm text-muted">
         Catatan / teori
         <textarea name="body" required maxLength={2000} rows={3} className={fieldClass} />
       </label>
 
-      <label className="block text-sm">
+      <label className="block text-sm text-muted">
         Bukti berupa teks (kutipan resmi atau nama buku di dalam game)
         <textarea name="evidence" maxLength={2000} rows={3} className={fieldClass} />
       </label>
 
-      <label className="block text-sm">
+      <label className="block text-sm text-muted">
         Bukti berupa file (opsional, maksimal 2 file, JPG/PNG/WebP/PDF, masing-masing 2MB)
         <input
           type="file"
@@ -140,14 +140,14 @@ export default function NoteForm({ entryId, userId, blocks }: Props) {
           className={fieldClass}
         />
       </label>
-      <p className="text-xs opacity-60">Isi minimal salah satu: bukti teks atau file.</p>
+      <p className="text-xs text-faint">Isi minimal salah satu: bukti teks atau file.</p>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-rose">{error}</p>}
 
       <button
         type="submit"
         disabled={busy}
-        className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="btn-gold disabled:opacity-50"
       >
         {uploading ? 'Mengunggah file...' : pending ? 'Mengirim...' : 'Ajukan'}
       </button>
