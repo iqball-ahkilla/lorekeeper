@@ -40,14 +40,14 @@ export default function ActionForm({
     >
       {children}
       {state && (
-        <p className={`text-sm ${state.ok ? 'text-green-600' : 'text-red-500'}`}>
+        <p className={`text-sm ${state.ok ? 'text-emerald-300' : 'text-rose'}`}>
           {state.message}
         </p>
       )}
       <button
         type="submit"
         disabled={pending}
-        className={buttonClassName ?? 'rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50'}>
+        className={buttonClassName ?? 'btn-gold py-1.5 disabled:opacity-50'}>
         {pending ? 'Menyimpan...' : submitLabel}
       </button>
     </form>

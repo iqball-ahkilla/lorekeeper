@@ -8,8 +8,7 @@ import { youtubeId } from '@/lib/youtube'
 const MAX_BYTES = 2 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-const fieldClass =
-  'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm'
+const fieldClass = 'field mt-1 py-1.5'
 
 export default function MediaAddForm({
   entryId,
@@ -98,7 +97,7 @@ export default function MediaAddForm({
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="mt-3 space-y-2">
-      <label className="block text-xs">
+      <label className="block text-xs text-muted">
         Jenis media
         <select
           value={mode}
@@ -111,7 +110,7 @@ export default function MediaAddForm({
       </label>
 
       {mode === 'image' ? (
-        <label className="block text-xs">
+        <label className="block text-xs text-muted">
           File gambar
           <input
             type="file"
@@ -121,7 +120,7 @@ export default function MediaAddForm({
           />
         </label>
       ) : (
-        <label className="block text-xs">
+        <label className="block text-xs text-muted">
           Tautan YouTube
           <input
             name="url"
@@ -131,13 +130,13 @@ export default function MediaAddForm({
         </label>
       )}
 
-      <label className="block text-xs">
+      <label className="block text-xs text-muted">
         Caption (opsional)
         <input name="caption" maxLength={200} className={fieldClass} />
       </label>
 
       {message && (
-        <p className={`text-sm ${message.ok ? 'text-green-600' : 'text-red-500'}`}>
+        <p className={`text-sm ${message.ok ? 'text-emerald-300' : 'text-rose'}`}>
           {message.text}
         </p>
       )}
@@ -145,7 +144,7 @@ export default function MediaAddForm({
       <button
         type="submit"
         disabled={busy}
-        className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+        className="btn-gold py-1.5 disabled:opacity-50"
       >
         {busy ? 'Memproses...' : 'Tambah media'}
       </button>

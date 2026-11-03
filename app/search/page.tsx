@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { SearchIcon } from '@/components/Icons'
 
 const KIND_LABEL: Record<string, string> = { region: 'Wilayah', topic: 'Topik' }
 
@@ -27,17 +28,21 @@ function clean(q: string) {
 
 function SearchForm({ defaultValue = '' }: { defaultValue?: string }) {
   return (
-    <form action="/search" className="mb-6 flex gap-2">
-      <input
-        type="search"
-        name="q"
-        defaultValue={defaultValue}
-        placeholder="Cari judul lore atau nama sub-section..."
-        className="w-full rounded border border-gray-400 bg-transparent px-3 py-2"
-      />
-      <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white">
-        Cari
-      </button>
+    <form action="/search" className="card mb-8 p-2">
+      <div className="flex items-center gap-2">
+        <SearchIcon className="ml-2 h-4 w-4 shrink-0 text-muted" />
+        <input
+          type="search"
+          name="q"
+          defaultValue={defaultValue}
+          placeholder="Cari wilayah, sub-bagian, atau judul lore…"
+          aria-label="Cari lore"
+          className="min-w-0 flex-1 bg-transparent py-2 text-sm text-fg placeholder:text-faint focus:outline-none"
+        />
+        <button type="submit" className="btn-gold shrink-0">
+          Cari
+        </button>
+      </div>
     </form>
   )
 }
@@ -50,7 +55,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
     return (
       <>
         <SearchForm defaultValue={q} />
-        <p className="text-sm opacity-70">Ketik minimal 2 karakter.</p>
+        <p className="text-sm text-muted">Ketik minimal 2 karakter.</p>
       </>
     )
   }
@@ -75,7 +80,7 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
     return (
       <>
         <SearchForm defaultValue={q} />
-        <p>Pencarian gagal. Coba lagi.</p>
+        <p className="card p-6 text-sm text-rose">Pencarian gagal. Coba lagi.</p>
       </>
     )
   }
@@ -90,21 +95,25 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
       <SearchForm defaultValue={q} />
 
       {total === 0 ? (
-        <p className="text-sm opacity-70">Tidak ada hasil untuk “{q}”.</p>
+        <p className="card p-6 text-sm text-muted">Tidak ada hasil untuk “{q}”.</p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          <p className="text-sm text-muted">
+            {total} hasil untuk “<span className="text-fg">{q}</span>”
+          </p>
           {regions.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold uppercase opacity-60">Region</h2>
-              <ul className="space-y-2">
+              <h2 className="eyebrow mb-3">Wilayah &amp; topik</h2>
+              <ul className="space-y-3">
                 {regions.map((r) => (
                   <li key={r.slug}>
-                    <Link href={`/lore/${r.slug}`} className="font-medium underline">
-                      {r.name}
+                    <Link
+                      href={`/lore/${r.slug}`}
+                      className="card flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-gold/50 hover:bg-surface-2"
+                    >
+                      <span className="font-serif text-lg font-semibold text-fg">{r.name}</span>
+                      <span className="chip">{KIND_LABEL[r.kind]}</span>
                     </Link>
-                    <span className="ml-2 text-xs opacity-50">
-                      {KIND_LABEL[r.kind]}
-                    </span>
                   </li>
                 ))}
               </ul>
@@ -113,20 +122,22 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
 
           {subsections.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold uppercase opacity-60">Sub-section</h2>
-              <ul className="space-y-2">
+              <h2 className="eyebrow mb-3">Sub-bagian</h2>
+              <ul className="space-y-3">
                 {subsections.map((s) => (
                   <li key={`${s.regions.slug}/${s.slug}`}>
                     <Link
                       href={`/lore/${s.regions.slug}/${s.slug}`}
-                      className="font-medium underline"
+                      className="card block px-4 py-3 transition-colors hover:border-gold/50 hover:bg-surface-2"
                     >
-                      {s.name}
+                      <span className="font-serif text-lg font-semibold text-fg">{s.name}</span>
+                      {s.alt_name && (
+                        <span className="ml-2 text-xs text-faint/80">{s.alt_name}</span>
+                      )}
+                      <span className="mt-0.5 block text-xs text-faint">
+                        {KIND_LABEL[s.regions.kind]} · {s.regions.name}
+                      </span>
                     </Link>
-                    {s.alt_name && <span className="ml-2 text-sm opacity-50">{s.alt_name}</span>}
-                    <p className="text-xs opacity-60">
-                      {KIND_LABEL[s.regions.kind]} · {s.regions.name}
-                    </p>
                   </li>
                 ))}
               </ul>
@@ -135,19 +146,20 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
 
           {entries.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-semibold uppercase opacity-60">Lore</h2>
-              <ul className="space-y-2">
+              <h2 className="eyebrow mb-3">Entri lore</h2>
+              <ul className="space-y-3">
                 {entries.map((e) => (
                   <li key={`${e.subsections.regions.slug}/${e.subsections.slug}/${e.slug}`}>
                     <Link
                       href={`/lore/${e.subsections.regions.slug}/${e.subsections.slug}/${e.slug}`}
-                      className="font-medium underline"
+                      className="card block px-4 py-3 transition-colors hover:border-gold/50 hover:bg-surface-2"
                     >
-                      {e.title}
+                      <span className="font-serif text-lg font-semibold text-fg">{e.title}</span>
+                      <span className="mt-0.5 block text-xs text-faint">
+                        {KIND_LABEL[e.subsections.regions.kind]} · {e.subsections.regions.name} /{' '}
+                        {e.subsections.name}
+                      </span>
                     </Link>
-                    <p className="text-xs opacity-60">
-                      {KIND_LABEL[e.subsections.regions.kind]} · {e.subsections.regions.name} / {e.subsections.name}
-                    </p>
                   </li>
                 ))}
               </ul>
@@ -161,8 +173,9 @@ async function SearchContent({ searchParams }: { searchParams: SearchParams }) {
 
 export default function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <main className="mx-auto w-full max-w-2xl p-8">
-      <h1 className="mb-4 text-2xl font-bold">Cari</h1>
+    <main className="page max-w-3xl flex-1 py-8 sm:py-10">
+      <p className="eyebrow">Pencarian</p>
+      <h1 className="mb-6 mt-1 font-serif text-4xl font-semibold text-fg">Cari Lore</h1>
       <Suspense fallback={<SearchForm />}>
         <SearchContent searchParams={searchParams} />
       </Suspense>

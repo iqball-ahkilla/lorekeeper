@@ -22,12 +22,12 @@ export default function DeleteItemForm({ type, id, name, summary }: Props) {
         const formData = new FormData(e.currentTarget)
         startTransition(() => formAction(formData))
       }}
-      className="mt-2 space-y-2 rounded border border-red-500/40 p-3"
+      className="mt-2 space-y-2 rounded-md border border-rose/40 bg-rose/5 p-3"
     >
       <input type="hidden" name="type" value={type} />
       <input type="hidden" name="id" value={id} />
 
-      <p className="text-sm text-red-500">
+      <p className="text-sm text-rose">
         Akan menghapus permanen &quot;{name}&quot; beserta: {summary}. Tindakan ini tidak
         bisa dibatalkan.
       </p>
@@ -37,15 +37,15 @@ export default function DeleteItemForm({ type, id, name, summary }: Props) {
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
         placeholder={`Ketik "${name}" untuk konfirmasi`}
-        className="w-full rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm"
+        className="field py-1.5"
       />
 
-      {state && !state.ok && <p className="text-sm text-red-500">{state.message}</p>}
+      {state && !state.ok && <p className="text-sm text-rose">{state.message}</p>}
 
       <button
         type="submit"
         disabled={!matches || pending}
-        className="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+        className="btn-danger disabled:opacity-50"
       >
         {pending ? 'Menghapus...' : 'Hapus permanen'}
       </button>

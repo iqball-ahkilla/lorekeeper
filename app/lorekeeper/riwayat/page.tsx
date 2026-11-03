@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { requireLorekeeper } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { formatWIB } from '@/lib/time'
+import Breadcrumb from '@/components/Breadcrumb'
 
 const PAGE = 50
 
@@ -226,7 +227,7 @@ function pageHref(p: { aksi: string; pelaku: string; sebelum?: string }) {
   return `/lorekeeper/riwayat${s ? `?${s}` : ''}`
 }
 
-const selectClass = 'mt-1 rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm'
+const selectClass = 'field mt-1 py-1.5'
 
 async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) {
   await requireLorekeeper()
@@ -258,7 +259,7 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
     supabase.from('profiles').select('id, username').eq('role', 'lorekeeper').order('username'),
   ])
 
-  if (error) return <p className="mt-6">Gagal memuat riwayat.</p>
+  if (error) return <p className="card mt-6 p-6 text-sm text-rose">Gagal memuat riwayat.</p>
 
   const all = (data ?? []) as unknown as LogRow[]
   const rows = all.slice(0, PAGE)
@@ -270,8 +271,8 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
 
   return (
     <>
-      <form action="/lorekeeper/riwayat" className="mt-6 flex flex-wrap items-end gap-3">
-        <label className="block text-xs">
+      <form action="/lorekeeper/riwayat" className="card mt-8 flex flex-wrap items-end gap-3 p-4">
+        <label className="block text-xs text-muted">
           Jenis aksi
           <select name="aksi" defaultValue={current.aksi} className={`${selectClass} block`}>
             <option value="">Semua</option>
@@ -283,7 +284,7 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
           </select>
         </label>
 
-        <label className="block text-xs">
+        <label className="block text-xs text-muted">
           Pelaku
           <select name="pelaku" defaultValue={current.pelaku} className={`${selectClass} block`}>
             <option value="">Semua lorekeeper</option>
@@ -295,16 +296,16 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
           </select>
         </label>
 
-        <button type="submit" className="rounded bg-blue-600 px-4 py-1.5 text-sm text-white">
+        <button type="submit" className="btn-gold py-1.5">
           Terapkan
         </button>
-        <Link href="/lorekeeper/riwayat" className="text-sm underline">
+        <Link href="/lorekeeper/riwayat" className="btn-ghost py-1.5">
           Reset
         </Link>
       </form>
 
       {rows.length === 0 ? (
-        <p className="mt-6 text-sm opacity-70">Belum ada aktivitas yang cocok.</p>
+        <p className="card mt-6 p-6 text-sm text-muted">Belum ada aktivitas yang cocok.</p>
       ) : (
         <ul className="mt-6 space-y-3">
           {rows.map((l) => {
@@ -318,23 +319,23 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
             const detail = detailText(l.details)
 
             return (
-              <li key={l.id} className="rounded border border-gray-400 p-3">
-                <p className="text-xs opacity-60">{formatWIB(l.created_at, true)}</p>
+              <li key={l.id} className="card p-4">
+                <p className="font-mono text-xs text-faint">{formatWIB(l.created_at, true)}</p>
 
-                <p className="mt-1 text-sm">
+                <p className="mt-1.5 text-sm leading-relaxed text-muted">
                   {l.profiles ? (
-                    <Link href={`/profile/${l.profiles.id}`} className="font-semibold hover:underline">
+                    <Link href={`/profile/${l.profiles.id}`} className="font-semibold text-fg hover:text-gold">
                       {l.profiles.username}
                     </Link>
                   ) : (
-                    <span className="font-semibold">(akun dihapus)</span>
+                    <span className="font-semibold text-fg">(akun dihapus)</span>
                   )}{' '}
                   {labelFor(l.action)}
                   {target ? (
                     <>
                       {': '}
                       {target.href ? (
-                        <Link href={target.href} className="underline">
+                        <Link href={target.href} className="text-gold hover:underline">
                           {target.label}
                         </Link>
                       ) : (
@@ -343,7 +344,7 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
                     </>
                   ) : (
                     l.target_id && (
-                      <span className="opacity-70">
+                      <span className="text-faint">
                         {': '}
                         {fallbackName ? `“${fallbackName}” ` : ''}(sudah dihapus)
                       </span>
@@ -351,7 +352,11 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
                   )}
                 </p>
 
-                {detail && <p className="mt-1 text-xs opacity-70">{detail}</p>}
+                {detail && (
+                  <p className="mt-2 rounded-md border border-line bg-deep/50 px-3 py-2 text-xs text-muted">
+                    {detail}
+                  </p>
+                )}
               </li>
             )
           })}
@@ -362,7 +367,7 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
         <p className="mt-6">
           <Link
             href={pageHref({ ...current, sebelum: rows[rows.length - 1].created_at })}
-            className="rounded border border-gray-400 px-4 py-2 text-sm"
+            className="btn-ghost"
           >
             Lebih lama →
           </Link>
@@ -374,16 +379,23 @@ async function RiwayatContent({ searchParams }: { searchParams: SearchParams }) 
 
 export default function RiwayatPage({ searchParams }: { searchParams: SearchParams }) {
   return (
-    <main className="mx-auto w-full max-w-3xl p-8">
-      <p className="mb-4 text-sm">
-        <Link href="/lorekeeper" className="underline">← Panel lorekeeper</Link>
-      </p>
-      <h1 className="text-2xl font-bold">Riwayat aktivitas</h1>
-      <p className="mt-1 text-sm opacity-70">
-        Catatan aksi moderasi dan pengelolaan konten oleh lorekeeper. Waktu dalam WIB.
-      </p>
+    <main className="page max-w-4xl flex-1 py-8 sm:py-10">
+      <Breadcrumb
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: 'Panel review', href: '/lorekeeper' },
+          { label: 'Riwayat aktivitas' },
+        ]}
+      />
+      <header className="mt-6 max-w-2xl">
+        <p className="eyebrow">Panel lorekeeper</p>
+        <h1 className="mt-1 font-serif text-4xl font-semibold text-fg">Riwayat Aktivitas</h1>
+        <p className="mt-2 text-sm text-muted">
+          Catatan aksi moderasi dan pengelolaan konten oleh lorekeeper. Waktu dalam WIB.
+        </p>
+      </header>
 
-      <Suspense fallback={<p className="mt-6">Memuat...</p>}>
+      <Suspense fallback={<div className="card mt-8 h-48 animate-pulse" />}>
         <RiwayatContent searchParams={searchParams} />
       </Suspense>
     </main>

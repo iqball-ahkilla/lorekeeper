@@ -33,19 +33,19 @@ export default function ParagraphForm({ blockId, label, initial, targets }: Prop
         rows={5}
         maxLength={5000}
         required
-        className="w-full rounded border border-gray-400 bg-transparent px-3 py-2"
+        className="field"
       />
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="btn-gold disabled:opacity-50"
         >
           {pending ? 'Menyimpan...' : 'Simpan'}
         </button>
         {state && (
-          <span className={`text-sm ${state.ok ? 'text-green-600' : 'text-red-500'}`}>
+          <span className={`text-sm ${state.ok ? 'text-emerald-300' : 'text-rose'}`}>
             {state.message}
           </span>
         )}

@@ -17,13 +17,13 @@ export type ControlItem = {
   kind?: 'region' | 'topic'
 }
 
-const inputClass =
-  'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm'
-const btnClass = 'rounded border border-gray-400 px-2 py-1 text-xs'
+const inputClass = 'field mt-1 py-1.5'
+const btnClass =
+  'rounded-md border border-line px-2.5 py-1 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-fg'
 
 const IMPACT_LABELS: Record<string, string> = {
-  subsections: 'sub-section',
-  entries: 'entry',
+  subsections: 'sub-bagian',
+  entries: 'entri',
   blocks: 'blok teks',
   posts: 'komentar dan catatan',
 }
@@ -121,22 +121,22 @@ export default async function ItemControls({
       </div>
 
       <details className="mt-2">
-        <summary className="cursor-pointer text-xs underline">Edit</summary>
+        <summary className="cursor-pointer text-xs font-medium text-gold hover:underline">Edit</summary>
         <ActionForm
           action={updateItem}
           submitLabel="Simpan"
-          className="mt-2 space-y-2 rounded border border-gray-400 p-3"
+          className="mt-2 space-y-2 rounded-md border border-line bg-deep/40 p-3"
         >
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="id" value={item.id} />
 
-          <label className="block text-xs">
+          <label className="block text-xs text-muted">
             {type === 'entry' ? 'Judul' : 'Nama'}
             <input name="name" required defaultValue={item.name} className={inputClass} />
           </label>
 
           {type === 'subsection' && (
-            <label className="block text-xs">
+            <label className="block text-xs text-muted">
               Nama alternatif (opsional)
               <input name="alt_name" defaultValue={item.altName ?? ''} className={inputClass} />
             </label>
@@ -144,14 +144,14 @@ export default async function ItemControls({
 
           {type === 'region' && (
             <>
-              <label className="block text-xs">
+              <label className="block text-xs text-muted">
                 Jenis
                 <select name="kind" defaultValue={item.kind ?? 'region'} className={inputClass}>
                   <option value="region">Wilayah</option>
                   <option value="topic">Topik</option>
                 </select>
               </label>
-              <label className="block text-xs">
+              <label className="block text-xs text-muted">
                 Deskripsi
                 <textarea
                   name="description"
@@ -164,11 +164,11 @@ export default async function ItemControls({
           )}
 
           {slugLocked ? (
-            <p className="text-xs opacity-70">
+            <p className="text-xs text-faint">
               Slug: <code>{item.slug}</code> (terkunci karena pernah diterbitkan)
             </p>
           ) : (
-            <label className="block text-xs">
+            <label className="block text-xs text-muted">
               Slug (masih bisa diubah karena belum pernah terbit)
               <input name="slug" defaultValue={item.slug} className={inputClass} />
             </label>
@@ -178,7 +178,7 @@ export default async function ItemControls({
 
       {item.status === 'archived' && (
         <details className="mt-2">
-          <summary className="cursor-pointer text-xs text-red-500 underline">
+          <summary className="cursor-pointer text-xs font-medium text-rose hover:underline">
             Hapus permanen
           </summary>
           <DeleteItemForm type={type} id={item.id} name={item.name} summary={summary} />

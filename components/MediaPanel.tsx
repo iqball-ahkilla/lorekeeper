@@ -3,7 +3,8 @@ import BlockMedia, { type Media } from '@/components/BlockMedia'
 import MediaAddForm from '@/components/MediaAddForm'
 import { deleteMedia, moveMedia, updateMedia } from '@/app/actions/media'
 
-const btnClass = 'rounded border border-gray-400 px-2 py-1 text-xs'
+const btnClass =
+  'rounded-md border border-line px-2.5 py-1 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-fg'
 
 export default function MediaPanel({
   entryId,
@@ -17,11 +18,11 @@ export default function MediaPanel({
   const sorted = [...items].sort((a, b) => a.sort_order - b.sort_order)
 
   return (
-    <div className="space-y-3 rounded border border-gray-400 p-3">
-      <p className="text-xs font-semibold">Media ({sorted.length})</p>
+    <div className="space-y-3 rounded-md border border-line bg-deep/40 p-3">
+      <p className="eyebrow">Media ({sorted.length})</p>
 
       {sorted.map((m) => (
-        <div key={m.id} className="space-y-2 rounded border border-gray-400 p-3">
+        <div key={m.id} className="space-y-2 rounded-md border border-line p-3">
           <BlockMedia items={[m]} />
 
           <div className="flex flex-wrap items-center gap-2">
@@ -41,7 +42,7 @@ export default function MediaPanel({
             </form>
             <form action={deleteMedia}>
               <input type="hidden" name="mediaId" value={m.id} />
-              <button type="submit" className={`${btnClass} text-red-500`}>
+              <button type="submit" className="rounded-md border border-line px-2.5 py-1 text-xs text-rose transition-colors hover:bg-surface-2">
                 Hapus media
               </button>
             </form>
@@ -58,14 +59,14 @@ export default function MediaPanel({
               defaultValue={m.caption ?? ''}
               maxLength={200}
               placeholder="Caption (opsional)"
-              className="min-w-0 flex-1 rounded border border-gray-400 bg-transparent px-3 py-1.5 text-sm"
+              className="field min-w-0 flex-1 py-1.5"
             />
           </ActionForm>
         </div>
       ))}
 
       <details>
-        <summary className="cursor-pointer text-xs underline">+ Tambah media</summary>
+        <summary className="cursor-pointer text-xs font-medium text-gold hover:underline">+ Tambah media</summary>
         <MediaAddForm entryId={entryId} blockId={blockId} />
       </details>
     </div>

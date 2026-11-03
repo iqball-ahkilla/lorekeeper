@@ -7,6 +7,8 @@ import ActionForm from '@/components/ActionForm'
 import LinkTextarea, { type LinkTarget } from '@/components/LinkTextarea'
 import StatusBadge, { type ContentStatus } from '@/components/StatusBadge'
 import { addBlock, deleteBlock, moveBlock, updateBlock } from '@/app/actions/blocks'
+import { changeStatus } from '@/app/actions/structure'
+import Breadcrumb from '@/components/Breadcrumb'
 
 import MediaPanel from '@/components/MediaPanel'
 import { type Media } from '@/components/BlockMedia'
@@ -35,6 +37,19 @@ type EditData = {
   content_blocks: BlockRow[]
 }
 
+type TreeRegion = {
+  name: string
+  slug: string
+  kind: 'region' | 'topic'
+  status: ContentStatus
+  subsections: {
+    name: string
+    slug: string
+    status: ContentStatus
+    lore_entries: { title: string; slug: string; status: ContentStatus }[]
+  }[]
+}
+
 type Kind = 'paragraph' | 'quote' | 'heading2' | 'heading3'
 
 const KIND_LABEL: Record<Kind, string> = {
@@ -44,8 +59,7 @@ const KIND_LABEL: Record<Kind, string> = {
   heading3: 'Heading 3',
 }
 
-const fieldClass =
-  'mt-1 w-full rounded border border-gray-400 bg-transparent px-3 py-2 text-sm'
+const fieldClass = 'field mt-1'
 
 function kindOf(b: BlockRow): Kind {
   if (b.block_type === 'heading') return b.heading_level === 3 ? 'heading3' : 'heading2'
@@ -54,7 +68,7 @@ function kindOf(b: BlockRow): Kind {
 
 function KindSelect({ defaultValue }: { defaultValue: Kind }) {
   return (
-    <label className="block text-xs">
+    <label className="block text-xs text-muted">
       Jenis blok
       <select name="kind" defaultValue={defaultValue} className={fieldClass}>
         <option value="paragraph">Paragraf</option>
@@ -80,8 +94,8 @@ function AddBlockForm({
   targets: LinkTarget[]
 }) {
   return (
-    <details className="rounded border border-dashed border-gray-400 p-3">
-      <summary className="cursor-pointer text-xs font-semibold">{label}</summary>
+    <details className="rounded-lg border border-dashed border-line p-3 transition-colors hover:border-gold/40">
+      <summary className="cursor-pointer text-xs font-semibold text-gold">{label}</summary>
       <ActionForm
         action={addBlock}
         submitLabel="Tambah blok"
@@ -112,12 +126,86 @@ function MoveButton({ blockId, direction }: { blockId: string; direction: 'up' |
       <input type="hidden" name="direction" value={direction} />
       <button
         type="submit"
-        className="rounded border border-gray-400 px-2 py-1 text-xs"
+        className="rounded-md border border-line px-2.5 py-1 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-fg"
         aria-label={direction === 'up' ? 'Geser ke atas' : 'Geser ke bawah'}
       >
         {direction === 'up' ? '▲' : '▼'}
       </button>
     </form>
+  )
+}
+
+function StructureTree({
+  tree,
+  currentRegion,
+  currentSub,
+  currentEntry,
+}: {
+  tree: TreeRegion[]
+  currentRegion: string
+  currentSub: string
+  currentEntry: string
+}) {
+  return (
+    <nav aria-label="Struktur konten" className="card p-3 text-sm">
+      <p className="eyebrow px-1 pb-2">Struktur konten</p>
+      <ul className="space-y-1">
+        {tree.map((r) => (
+          <li key={r.slug}>
+            <details open={r.slug === currentRegion}>
+              <summary className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-fg hover:bg-surface-2">
+                <span className="truncate font-medium">{r.name}</span>
+                <StatusBadge status={r.status} hidePublished />
+              </summary>
+              <ul className="ml-3 mt-1 space-y-1 border-l border-line pl-2">
+                {r.subsections.map((sub) => (
+                  <li key={sub.slug}>
+                    <details open={r.slug === currentRegion && sub.slug === currentSub}>
+                      <summary className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-muted hover:bg-surface-2 hover:text-fg">
+                        <span className="truncate">{sub.name}</span>
+                        <span className="ml-auto text-xs text-faint">
+                          {sub.lore_entries.length}
+                        </span>
+                      </summary>
+                      <ul className="ml-2 mt-1 space-y-0.5">
+                        {sub.lore_entries.map((e) => {
+                          const on =
+                            r.slug === currentRegion &&
+                            sub.slug === currentSub &&
+                            e.slug === currentEntry
+                          return (
+                            <li key={e.slug}>
+                              <Link
+                                href={`/lorekeeper/edit/${r.slug}/${sub.slug}/${e.slug}`}
+                                aria-current={on ? 'page' : undefined}
+                                className={`flex items-center gap-2 rounded px-2 py-1 ${
+                                  on
+                                    ? 'border-l-2 border-gold bg-surface-2 text-gold'
+                                    : 'text-muted hover:bg-surface-2 hover:text-fg'
+                                }`}
+                              >
+                                <span className="truncate">{e.title}</span>
+                                <StatusBadge status={e.status} hidePublished />
+                              </Link>
+                            </li>
+                          )
+                        })}
+                        {sub.lore_entries.length === 0 && (
+                          <li className="px-2 py-1 text-xs text-faint">Belum ada entri.</li>
+                        )}
+                      </ul>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </li>
+        ))}
+      </ul>
+      <Link href="/lorekeeper/konten" className="link-gold mt-3 px-1">
+        Kelola struktur
+      </Link>
+    </nav>
   )
 }
 
@@ -146,29 +234,75 @@ async function EditContent({ params }: { params: Params }) {
     .select('path, label, kind, search_text')
   const targets = (targetRows ?? []) as LinkTarget[]
 
+  const { data: treeRows } = await supabase
+    .from('regions')
+    .select(
+      'name, slug, kind, status, sort_order, subsections(name, slug, status, sort_order, lore_entries(title, slug, status))'
+    )
+    .order('sort_order', { ascending: true })
+    .order('sort_order', { ascending: true, referencedTable: 'subsections' })
+  const tree = ((treeRows ?? []) as unknown as TreeRegion[]).map((r) => ({
+    ...r,
+    subsections: r.subsections.map((sub) => ({
+      ...sub,
+      lore_entries: [...sub.lore_entries].sort((a, b) => a.title.localeCompare(b.title)),
+    })),
+  }))
+
   const blocks = entry.content_blocks
 
   return (
     <>
-      <p className="flex flex-wrap gap-4 text-sm">
-        <Link href={`/lore/${region}/${subsection}/${entrySlug}`} className="underline">
-          ← Lihat halaman
-        </Link>
-        <Link href="/lorekeeper/konten" className="underline">
-          Kelola struktur
-        </Link>
-      </p>
+      <Breadcrumb
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: 'Kelola konten', href: '/lorekeeper/konten' },
+          { label: entry.title },
+        ]}
+      />
 
-      <h1 className="mt-4 flex flex-wrap items-center gap-3 text-2xl font-bold">
-        Edit isi: {entry.title}
-        <StatusBadge status={entry.status} />
-      </h1>
-      <p className="mt-1 text-sm opacity-70">
-        Ketik <code>[[</code> untuk menyisipkan tautan ke halaman lore lain. Perubahan pada
-        entry yang sudah terbit langsung tampil ke publik.
-      </p>
+      <header className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <p className="eyebrow">Editor entri</p>
+          <h1 className="mt-1 flex flex-wrap items-center gap-3 font-serif text-3xl font-semibold text-fg sm:text-4xl">
+            {entry.title}
+            <StatusBadge status={entry.status} />
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            Ketik <code className="rounded bg-deep px-1 text-gold">[[</code> untuk menyisipkan
+            tautan ke halaman lore lain. Perubahan pada entri yang sudah terbit langsung tampil
+            ke publik.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/lore/${region}/${subsection}/${entrySlug}`} className="btn-ghost">
+            Lihat halaman
+          </Link>
+          {entry.status === 'draft' && (
+            <form action={changeStatus}>
+              <input type="hidden" name="type" value="entry" />
+              <input type="hidden" name="id" value={entry.id} />
+              <input type="hidden" name="op" value="publish" />
+              <button type="submit" className="btn-gold">
+                Terbitkan
+              </button>
+            </form>
+          )}
+        </div>
+      </header>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        <aside className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto">
+          <StructureTree
+            tree={tree}
+            currentRegion={region}
+            currentSub={subsection}
+            currentEntry={entrySlug}
+          />
+        </aside>
+
+        <div className="min-w-0">
+      <div className="space-y-4">
         {blocks.length > 0 && (
           <AddBlockForm
             entryId={entry.id}
@@ -188,15 +322,16 @@ async function EditContent({ params }: { params: Params }) {
           ).length
 
           return (
-            <article key={b.id} className="space-y-3 rounded border border-gray-400 p-4">
+            <article key={b.id} className="card space-y-4 p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium">
-                  Blok {i + 1} · {KIND_LABEL[kindOf(b)]}
+                <p className="flex items-center gap-2 text-sm font-medium text-fg">
+                  <span className="font-serif text-lg text-gold-dim">{i + 1}</span>
+                  <span className="chip border-gold/30 text-gold">{KIND_LABEL[kindOf(b)]}</span>
                 </p>
                 <div className="flex items-center gap-2 text-xs">
-                  {mediaCount > 0 && <span className="opacity-70">{mediaCount} media</span>}
+                  {mediaCount > 0 && <span className="text-faint">{mediaCount} media</span>}
                   {activeNotes > 0 && (
-                    <span className="opacity-70">{activeNotes} catatan aktif</span>
+                    <span className="text-faint">{activeNotes} catatan aktif</span>
                   )}
                   <MoveButton blockId={b.id} direction="up" />
                   <MoveButton blockId={b.id} direction="down" />
@@ -220,11 +355,11 @@ async function EditContent({ params }: { params: Params }) {
               <MediaPanel entryId={entry.id} blockId={b.id} items={b.block_media} />
 
               <details>
-                <summary className="cursor-pointer text-xs text-red-500 underline">
+                <summary className="cursor-pointer text-xs font-medium text-rose hover:underline">
                   Hapus blok
                 </summary>
                 {activeNotes > 0 ? (
-                  <p className="mt-2 text-xs text-red-500">
+                  <p className="mt-2 text-xs text-rose">
                     Blok ini punya {activeNotes} catatan aktif. Tolak atau tarik catatannya
                     dulu di Panel Lorekeeper.
                   </p>
@@ -232,11 +367,11 @@ async function EditContent({ params }: { params: Params }) {
                   <ActionForm
                     action={deleteBlock}
                     submitLabel="Ya, hapus blok"
-                    buttonClassName="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                    buttonClassName="btn-danger disabled:opacity-50"
                     className="mt-2 space-y-2"
                   >
                     <input type="hidden" name="blockId" value={b.id} />
-                    <p className="text-xs text-red-500">
+                    <p className="text-xs text-rose">
                       Blok ini
                       {mediaCount > 0
                         ? ` beserta ${mediaCount} media (file gambarnya ikut dihapus dari Storage)`
@@ -265,14 +400,16 @@ async function EditContent({ params }: { params: Params }) {
           targets={targets}
         />
       </div>
+        </div>
+      </div>
     </>
   )
 }
 
 export default function EditPage({ params }: { params: Params }) {
   return (
-    <main className="mx-auto w-full max-w-2xl p-8">
-      <Suspense fallback={<p>Memuat...</p>}>
+    <main className="page flex-1 py-8 sm:py-10">
+      <Suspense fallback={<div className="card h-64 animate-pulse" />}>
         <EditContent params={params} />
       </Suspense>
     </main>

@@ -23,11 +23,11 @@ export default function Attachments({ items }: { items: Attachment[] | null }) {
                   src={url}
                   alt={a.file_name}
                   loading="lazy"
-                  className="h-24 w-24 rounded border border-gray-400 object-cover"
+                  className="h-24 w-24 rounded border border-line object-cover"
                 />
               </a>
             ) : (
-              <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm underline">
+              <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-gold underline">
                 Dokumen: {a.file_name}
               </a>
             )}

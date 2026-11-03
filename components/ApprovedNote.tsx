@@ -10,15 +10,15 @@ export default function ApprovedNote({ body, author, authorId, edited }: Props) 
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="mt-2">
+    <div className="border-l border-line py-1 pl-3">
       <p
         onClick={(e) => {
           // Klik pada tautan tidak boleh ikut membuka/menutup tooltip
           if (!(e.target as HTMLElement).closest('a')) setOpen(!open)
         }}
-        className="cursor-pointer italic text-yellow-600"
+        className="cursor-pointer text-sm leading-relaxed text-muted"
       >
-        Note komunitas: <RichText text={body} />
+        <RichText text={body} />{' '}
         <button
           type="button"
           aria-expanded={open}
@@ -27,17 +27,17 @@ export default function ApprovedNote({ body, author, authorId, edited }: Props) 
             e.stopPropagation()
             setOpen(!open)
           }}
-          className="ml-2 rounded border border-yellow-600/50 px-1.5 text-xs not-italic"
+          className="whitespace-nowrap text-[11px] text-faint underline decoration-dotted underline-offset-2 hover:text-sky"
         >
-          ?
+          Spekulasi [?]
         </button>
       </p>
 
       {open && (
-        <p className="mt-1 text-xs opacity-70">
+        <p className="mt-2 text-xs leading-relaxed text-muted">
           Teks masih bersifat teori/spekulasi komunitas. Diajukan oleh{' '}
           {authorId ? (
-            <Link href={`/profile/${authorId}`} className="underline">
+            <Link href={`/profile/${authorId}`} className="text-fg underline">
               {author}
             </Link>
           ) : (

@@ -23,15 +23,15 @@ export default function CommentForm({ entryId, parentId, placeholder }: Props) {
         maxLength={2000}
         rows={3}
         placeholder={placeholder}
-        className="w-full rounded border border-gray-400 bg-transparent px-3 py-2"
+        className="field"
       />
 
-      {state?.error && <p className="text-sm text-red-500">{state.error}</p>}
+      {state?.error && <p className="text-sm text-rose">{state.error}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="btn-gold disabled:opacity-50"
       >
         {pending ? 'Mengirim...' : 'Kirim'}
       </button>
